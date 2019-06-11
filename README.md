@@ -1,2 +1,2 @@
 # self
-a self expolre
+a self explorer
