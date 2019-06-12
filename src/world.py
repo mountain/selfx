@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from Box2D.Box2D import (b2PolygonShape as polygonShape, b2World as world)
+from Box2D.Box2D import (b2PolygonShape as polygonShape, b2World)
 
-world = world(gravity=(0, -10), doSleep=True)
+world = b2World(gravity=(0, -10), doSleep=True)
 
 ground_body = world.CreateStaticBody(
     position=(0, 0),
