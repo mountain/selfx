@@ -12,9 +12,9 @@ echo -e "${CLR_YLW}Checking Python version......${CLR_NOR}"
 PYV=`python -c "import sys;t='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(t)";`
 if [[ $PYV == 2.7 ]]
 then
-    PY=python3.6;
-    PIP=pip3.6;
-    PIP_INST="pip3.6 install -i https://pypi.douban.com/simple/";
+    PY=python3;
+    PIP=pip3;
+    PIP_INST="pip3 install -i https://pypi.douban.com/simple/";
     NTB="ipython3 notebook";
     TEST="nosetests"
 fi
