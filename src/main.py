@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import gym
+# bootstrap
 import gym_selfx.selfx
 
+import gym
 
 from gym import wrappers, logger
 

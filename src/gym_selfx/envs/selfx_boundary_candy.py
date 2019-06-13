@@ -14,8 +14,5 @@ class SelfxBoundaryCandyEnv(SelfXEnv):
     def __init__(self):
         super(SelfxBoundaryCandyEnv, self).__init__()
 
-    def _get_reward(self):
-        return 0
-
-    def _reset(self):
-        return super(SelfxBoundaryCandyEnv, self)._reset()
+    def init_environment(self):
+        return bndc.SelfxBoundaryCandyEnvironment()
