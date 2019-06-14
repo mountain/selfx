@@ -20,9 +20,15 @@ class SelfxEnvironment:
         return SelfxScope()
 
 
+class EventHandler:
+
+    def handle_event(self, evt):
+        pass
+
+
 class EventSource:
 
-    def add_listener(self, listener):
+    def add_handler(self, handler):
         pass
 
     def fire_event(self, evt):

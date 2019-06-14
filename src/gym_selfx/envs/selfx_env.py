@@ -22,12 +22,12 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.scope = self.env.build_scope()
         self.agent = self.env.build_agent()
 
-        self.agent.add_listener(self.scope)
-        self.scope.add_listener(self.agent)
+        self.agent.add_handler(self.scope)
+        self.scope.add_handler(self.agent)
         self.outer.add_agent(self.agent)
 
         self.rules.apply_to(self.outer)
-        self.outer.add_listener(self.rules)
+        self.outer.add_handler(self.rules)
 
         self.action_space = [(a, b) for a in self.inner.availabe_actions() for b in self.outer.availabe_actions()]
 
