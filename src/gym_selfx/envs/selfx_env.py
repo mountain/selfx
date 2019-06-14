@@ -20,16 +20,16 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.outer = self.env.build_world()
         self.rules = self.env.build_rules()
         self.scope = self.env.build_scope()
-        self.agent = self.env.build_agent()
+        self.agent = self.env.build_agent(self.inner)
 
         self.outer.add_step_handler(self.scope)
 
-        self.agent.add_handler(self.scope)
-        self.scope.add_handler(self.agent)
+        self.agent.add_move_handler(self.scope)
+        self.scope.add_changed_handler(self.agent)
         self.outer.add_agent(self.agent)
 
-        self.rules.apply_to(self.outer)
-        self.outer.add_handler(self.rules)
+        self.outer.add_change_handler(self.rules)
+        self.rules.enforce_on(self.outer)
 
         self.action_space = [(a, b) for a in self.inner.availabe_actions() for b in self.outer.availabe_actions()]
 
@@ -53,10 +53,10 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         status1 = self.inner.step()
         status2 = self.outer.step()
 
-        reward = self.outer.get_reward()
+        reward = self.outer.reward()
 
-        obs1 = self.inner.getState()
-        obs2 = self.outer.getState()
+        obs1 = self.inner.state()
+        obs2 = self.outer.state()
 
         episode_over = (status1 != selfx.IN_GAME) and (status2 != selfx.IN_GAME)
 
@@ -65,7 +65,7 @@ class SelfXEnv(gym.Env, utils.EzPickle):
     def reset(self):
         self.inner.reset()
         self.outer.reset()
-        return self.inner.getState(), self.outer.getState()
+        return self.inner.state(), self.outer.state()
 
     def render(self, mode='human', close=False):
         self.inner.render(mode, close)
