@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+
+
 # Game system
 QUIT = -1
 IN_GAME = 0
@@ -20,21 +23,6 @@ class SelfxEnvironment:
         return SelfxScope()
 
 
-class EventHandler:
-
-    def handle_event(self, evt):
-        pass
-
-
-class EventSource:
-
-    def add_handler(self, handler):
-        pass
-
-    def fire_event(self, evt):
-        pass
-
-
 class SelfxWorld:
     pass
 
@@ -48,5 +36,20 @@ class SelfxAgent:
 
 
 class SelfxScope:
-    pass
+
+    def get_mask(self):
+        return np.zeros([100, 100])
+
+    def on_world_step(self, world):
+        snapshot = world.get_snapshot()
+        mask = self.get_mask()
+        idxs = self.get_indexes()
+        scope = np.take(snapshot * mask, idxs)
+
+        self.fire_scope_event(self, scope=scope)
+
+    def fire_scope_event(self, src, **pwargs):
+        for l in self.listerners:
+            l.on_scope_event(src, **pwargs)
+
 

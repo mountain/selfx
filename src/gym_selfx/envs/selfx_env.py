@@ -22,6 +22,8 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.scope = self.env.build_scope()
         self.agent = self.env.build_agent()
 
+        self.outer.add_step_handler(self.scope)
+
         self.agent.add_handler(self.scope)
         self.scope.add_handler(self.agent)
         self.outer.add_agent(self.agent)
