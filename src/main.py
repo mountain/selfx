@@ -24,7 +24,7 @@ if __name__ == '__main__':
     outdir = '/tmp/results-selfx-bounday-candy'
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
-    agent = Agent(env.inner)
+    agent = env.agent
 
     episode_count = 100
     reward = 0
@@ -37,11 +37,7 @@ if __name__ == '__main__':
             ob, reward, done, _ = env.step(action)
             if done:
                 break
-            # Note there's no env.render() here. But the environment still can open window and
-            # render if asked by env.monitor: it calls env.render('rgb_array') to record video.
-            # Video is not recorded every episode, see capped_cubic_video_schedule for details.
-
-        env.render()
+            env.render(mode='rgb_array')
 
     # Close the env and write monitor result info to disk
     env.close()

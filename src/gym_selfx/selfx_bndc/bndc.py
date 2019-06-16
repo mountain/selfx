@@ -12,6 +12,6 @@ PUNISHED = 12
 NOOP = 100
 
 
-class SelfxBoundaryCandyEnvironment(selfx.SelfxEnvironment):
+class SelfxBoundaryCandyToolkit(selfx.SelfxToolkit):
     def __init__(self):
-        super(SelfxBoundaryCandyEnvironment, self).__init__()
+        super(SelfxBoundaryCandyToolkit, self).__init__()

@@ -5,15 +5,16 @@ import numpy as np
 
 
 # Game system
-QUIT = -1
 IN_GAME = 0
+OUT_GAME = 1
 
 
 # Action system
 NOOP = 10
+QUIT = 11
 
 
-class SelfxEnvironment:
+class SelfxToolkit:
 
     def build_world(self):
         return SelfxWorld()
@@ -29,36 +30,58 @@ class SelfxEnvironment:
 
 
 class SelfxWorld:
+    def __init__(self):
+        self.status = IN_GAME
+        self.scores = 100
+
+        self.agent = None
+
+        self.step_handlers = []
+        self.changed_handlers = []
 
     def availabe_actions(self):
-        return [NOOP]
+        return [NOOP, QUIT]
 
     def act(self, actions):
-        return NOOP
+        return random.sample(actions, 1)
 
     def state(self):
-        return None
+        return self.status
 
     def reward(self):
-        return 0
+        return self.scores
 
     def reset(self):
         pass
 
-    def step(self):
-        pass
+    def step(self, action):
+        if action == NOOP:
+            self.fire_step_event()
+
+        if action == QUIT:
+            self.status = OUT_GAME
 
     def render(self, mode='human', close=False):
-        pass
+        return np.zeros([100, 100, 3], dtype='uint8')
 
     def add_agent(self, agent):
-        pass
+        self.agent = agent
 
     def add_step_handler(self, handler):
-        pass
+        if handler not in self.step_handlers:
+            self.step_handlers.append(handler)
 
     def add_change_handler(self, handler):
-        pass
+        if handler not in self.changed_handlers:
+            self.changed_handlers.append(handler)
+
+    def fire_step_event(self, **pwargs):
+        for h in self.step_handlers:
+            h.on_world_stepped(self, **pwargs)
+
+    def fire_changed_event(self, **pwargs):
+        for h in self.changed_handlers:
+            h.on_world_changed(self, **pwargs)
 
 
 class SelfxGameRules:
@@ -97,10 +120,10 @@ class SelfxScope:
         snapshot = world.get_snapshot()
         mask = self.get_mask(snapshot)
 
-        self.fire_scope_event(self, scope=snapshot * mask)
+        self.fire_changed_event(scope=snapshot * mask)
 
-    def fire_scope_changed_event(self, src, **pwargs):
-        for l in self.listerners:
-            l.on_scope_changed_event(src, **pwargs)
+    def fire_changed_event(self, **pwargs):
+        for h in self.handlers:
+            h.on_scope_changed(self, **pwargs)
 
 

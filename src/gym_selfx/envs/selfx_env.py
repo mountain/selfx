@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
 import gym
 import gym_selfx.selfx.selfx as selfx
 
@@ -11,16 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class SelfXEnv(gym.Env, utils.EzPickle):
-    metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human', 'rgb_array']}
 
     def __init__(self):
-        self.env = self.init_environment()
+        self.toolkit = self.init_toolkit()
 
-        self.inner = self.env.build_world()
-        self.outer = self.env.build_world()
-        self.rules = self.env.build_rules()
-        self.scope = self.env.build_scope()
-        self.agent = self.env.build_agent(self.inner)
+        self.inner = self.toolkit.build_world()
+        self.outer = self.toolkit.build_world()
+        self.rules = self.toolkit.build_rules()
+        self.scope = self.toolkit.build_scope()
+        self.agent = self.toolkit.build_agent(self.inner)
 
         self.outer.add_step_handler(self.scope)
 
@@ -36,13 +37,11 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.status = (selfx.IN_GAME, selfx.IN_GAME)
 
     def __del__(self):
-        self.inner.act(selfx.QUIT)
-        self.inner.step()
-        self.outer.act(selfx.QUIT)
-        self.outer.step()
+        self.inner.step(selfx.QUIT)
+        self.outer.step(selfx.QUIT)
 
-    def init_environment(self):
-        return None
+    def init_toolkit(self):
+        return selfx.SelfxToolkit()
 
     def step(self, action):
         action1, action2 = action
@@ -50,15 +49,15 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.inner.act(action1)
         self.outer.act(action2)
 
-        status1 = self.inner.step()
-        status2 = self.outer.step()
+        status1 = self.inner.step(action1)
+        status2 = self.outer.step(action2)
 
         reward = self.outer.reward()
 
         obs1 = self.inner.state()
         obs2 = self.outer.state()
 
-        episode_over = (status1 != selfx.IN_GAME) and (status2 != selfx.IN_GAME)
+        episode_over = (status1 != selfx.OUT_GAME) and (status2 != selfx.OUT_GAME)
 
         return (obs1, obs2), reward, episode_over, {}
 
@@ -68,5 +67,6 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         return self.inner.state(), self.outer.state()
 
     def render(self, mode='human', close=False):
-        self.inner.render(mode, close)
-        self.outer.render(mode, close)
+        arr1 = self.inner.render(mode, close)
+        arr2 = self.outer.render(mode, close)
+        return np.concatenate([arr1, arr2], axis=0)
