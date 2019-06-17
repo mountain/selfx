@@ -17,6 +17,7 @@
 # 3. This notice may not be removed or altered from any source distribution.
 
 import cv2
+import random
 import numpy as np
 
 from Box2D import (b2Color, b2DistanceJoint, b2MouseJoint, b2PulleyJoint)
@@ -40,7 +41,7 @@ class OpencvDrawFuncs(object):
         self._ppm = ppm
         self._colors = {
             staticBody: (255, 255, 255),
-            dynamicBody: (255, 127, 127),
+            dynamicBody: (255, 0, 0),
             kinematicBody: (127, 255, 230),
         }
         self._fill_polygon = fill_polygon
@@ -116,8 +117,13 @@ class OpencvDrawFuncs(object):
         circle = fixture.shape
         position = self._fix_vertices(
             [body.transform * circle.pos * self._ppm])[0]
-        cv2.circle(self.screen, cvcoord(position), int(
-            circle.radius * self._ppm), self._colors[body.type], 1)
+
+        if self._fill_polygon:
+            cv2.circle(self.screen, cvcoord(position), int(
+                circle.radius * self._ppm), body.userData['color'], -1)
+        else:
+            cv2.circle(self.screen, cvcoord(position), int(
+                circle.radius * self._ppm), body.userData['color'], 1)
 
     def _draw_edge(self, body, fixture):
         edge = fixture.shape
