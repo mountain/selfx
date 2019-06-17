@@ -15,22 +15,23 @@ QUIT = 11
 
 
 class SelfxToolkit:
+    def build_world(self, ctx):
+        return SelfxWorld(ctx)
 
-    def build_world(self):
-        return SelfxWorld()
+    def build_rules(self, ctx):
+        return SelfxGameRules(ctx)
 
-    def build_rules(self):
-        return SelfxGameRules()
+    def build_agent(self, ctx):
+        return SelfxAgent(ctx)
 
-    def build_agent(self, inner_world):
-        return SelfxAgent(inner_world)
-
-    def build_scope(self):
-        return SelfxScope()
+    def build_scope(self, ctx):
+        return SelfxScope(ctx)
 
 
 class SelfxWorld:
-    def __init__(self):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
         self.status = IN_GAME
         self.scores = 100
 
@@ -85,15 +86,19 @@ class SelfxWorld:
 
 
 class SelfxGameRules:
+    def __init__(self, ctx):
+        self.ctx = ctx
 
     def enforce_on(self, world):
         pass
 
 
 class SelfxAgent:
-    def __init__(self, inner_world):
+    def __init__(self, ctx):
+        self.ctx = ctx
+
         self.action_space = [NOOP]
-        self.inner_world = inner_world
+        self.inner_world = ctx['inner']
 
     def get_center(self):
         return 0, 0
@@ -106,6 +111,8 @@ class SelfxAgent:
 
 
 class SelfxScope:
+    def __init__(self, ctx):
+        self.ctx = ctx
 
     def get_mask(self, snapshot):
         return np.ones(snapshot.shape)

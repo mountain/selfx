@@ -4,24 +4,18 @@
 # bootstrap
 import gym_selfx.selfx
 
-import gym_selfx.selfx.selfx as selfx
 import gym
 
 from gym import wrappers, logger
-
-
-class Agent(selfx.SelfxAgent):
-    def __init__(self, inner_world):
-        super(Agent, self).__init__(inner_world)
 
 
 if __name__ == '__main__':
 
     logger.set_level(logger.INFO)
 
-    env = gym.make('selfx-bounday-candy-v0')
+    env = gym.make('selfx-billard-v0')
 
-    outdir = '/tmp/results-selfx-bounday-candy'
+    outdir = 'results/selfx-billard'
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
     agent = env.agent

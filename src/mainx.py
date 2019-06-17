@@ -3,7 +3,7 @@
 
 import cv2
 
-from gym_selfx.selfx.world import world
+from gym_selfx.selfx_billard.world import world
 from gym_selfx.render.draw import OpencvDrawFuncs
 
 TARGET_FPS = 60

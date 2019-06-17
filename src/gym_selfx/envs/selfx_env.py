@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import random
+
 import gym
 import gym_selfx.selfx.selfx as selfx
 
@@ -14,14 +16,24 @@ logger = logging.getLogger(__name__)
 class SelfXEnv(gym.Env, utils.EzPickle):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
-    def __init__(self):
-        self.toolkit = self.init_toolkit()
+    def __init__(self, toolkit):
+        self.toolkit = toolkit
 
-        self.inner = self.toolkit.build_world()
-        self.outer = self.toolkit.build_world()
-        self.rules = self.toolkit.build_rules()
-        self.scope = self.toolkit.build_scope()
-        self.agent = self.toolkit.build_agent(self.inner)
+        ctx = {}
+        self.inner = self.toolkit.build_world(ctx)
+        self.outer = self.toolkit.build_world(ctx)
+        self.rules = self.toolkit.build_rules(ctx)
+        self.scope = self.toolkit.build_scope(ctx)
+        ctx.update({
+            'env': self,
+            'inner': self.inner,
+            'outer': self.outer,
+            'rules': self.rules,
+        })
+        self.agent = self.toolkit.build_agent(ctx)
+        ctx.update({
+            'agent': self.agent,
+        })
 
         self.outer.add_step_handler(self.scope)
 
@@ -40,9 +52,6 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.inner.step(selfx.QUIT)
         self.outer.step(selfx.QUIT)
 
-    def init_toolkit(self):
-        return selfx.SelfxToolkit()
-
     def step(self, action):
         action1, action2 = action
 
@@ -57,7 +66,7 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         obs1 = self.inner.state()
         obs2 = self.outer.state()
 
-        episode_over = (status1 != selfx.OUT_GAME) and (status2 != selfx.OUT_GAME)
+        episode_over = (status1 != selfx.OUT_GAME) and (status2 != selfx.OUT_GAME) and random.random() < 0.01
 
         return (obs1, obs2), reward, episode_over, {}
 
