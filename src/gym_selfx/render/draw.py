@@ -40,8 +40,8 @@ class OpencvDrawFuncs(object):
         self._ppm = ppm
         self._colors = {
             staticBody: (255, 255, 255),
-            dynamicBody: (127, 127, 127),
-            kinematicBody: (127, 127, 230),
+            dynamicBody: (255, 127, 127),
+            kinematicBody: (127, 255, 230),
         }
         self._fill_polygon = fill_polygon
         self._flip_y = flip_y
