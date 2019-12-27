@@ -3,3 +3,6 @@ opencv-python
 opencv-contrib-python
 box2d
 box2d-kengz
+
+torch
+torchvision
