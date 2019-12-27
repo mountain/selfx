@@ -13,6 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class ActionSpace(list):
+    def __init__(self, elments):
+        super(ActionSpace, self).__init__(elments)
+        self.n = len(elments)
+
+
 class SelfXEnv(gym.Env, utils.EzPickle):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
@@ -35,6 +41,9 @@ class SelfXEnv(gym.Env, utils.EzPickle):
             'agent': self.agent,
         })
 
+        self.x_threshold = self.outer.x_threshold
+        self.y_threshold = self.outer.y_threshold
+
         self.outer.add_step_handler(self.scope)
 
         self.agent.add_move_handler(self.scope)
@@ -44,9 +53,9 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.outer.add_change_handler(self.rules)
         self.rules.enforce_on(self.outer)
 
-        self.action_space = [(a, b) for a in self.inner.availabe_actions() for b in self.outer.availabe_actions()]
+        self.action_space = ActionSpace([(a, b) for a in self.inner.availabe_actions() for b in self.outer.availabe_actions()])
 
-        self.status = (selfx.IN_GAME, selfx.IN_GAME)
+        self.state = (selfx.IN_GAME, selfx.IN_GAME)
 
     def __del__(self):
         self.inner.step(selfx.QUIT)

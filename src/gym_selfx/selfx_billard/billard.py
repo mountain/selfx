@@ -41,7 +41,10 @@ class SelfxBillardToolkit(selfx.SelfxToolkit):
 class SelfxBillardWorld(selfx.SelfxWorld):
     def __init__(self, ctx):
         super(SelfxBillardWorld, self).__init__(ctx)
-        self.drawer = OpencvDrawFuncs(w=1029, h=645, ppm=0.9)
+        self.x_threshold = 1029
+        self.y_threshold = 645
+
+        self.drawer = OpencvDrawFuncs(w=self.x_threshold, h=self.y_threshold, ppm=0.9)
         self.drawer.install()
 
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
@@ -60,27 +63,8 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                 },
             )
 
-        angle = random.random() * 360
-        alpha = np.deg2rad(angle)
-        self.monster = self.b2.CreateDynamicBody(
-            position=(513, 321),
-            angle=alpha,
-            linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
-            linearDamping=0.0,
-            bullet=True,
-            userData= {
-                'world': self.b2,
-                'type': 'monster',
-                'energy': 100,
-                'ax': 0,
-                'ay': 0,
-                'color': (255, 255, 0)
-            }
-        )
-        self.monster.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
-
     def act(self, actions):
-        if self.monster.userData['energy'] <= 0:
+        if self.ctx['agent'].b2.userData['energy'] <= 0:
             return selfx.QUIT
         else:
             return selfx.NOOP
@@ -102,25 +86,11 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                 },
             ).CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
-        vx, vy = self.monster.linearVelocity
-        vx = vx + self.monster.userData['ax'] * TIME_STEP
-        vy = vy + self.monster.userData['ay'] * TIME_STEP
-        self.monster.linearVelocity = vx, vy
-        self.monster.userData['energy'] = self.monster.userData['energy'] - np.abs(
-            (np.abs(self.monster.userData['ax'] * vx) + np.abs(self.monster.userData['ay'] * vy)) * TIME_STEP
-        )
-
         self.b2.Step(TIME_STEP, 10, 10)
-
-        for contact in self.monster.contacts:
-            other = contact.other
-            if other.userData['type'] == 'candy':
-                self.monster.userData['energy'] = self.monster.userData['energy'] + 10 * other.mass
-                del other
 
         for b in self.b2.bodies:
             x, y = b.position
-            b.position = x % 1025, y % 641
+            b.position = x % self.x_threshold, y % self.y_threshold
 
         if action == selfx.NOOP:
             self.scores -= 1.0
@@ -145,13 +115,50 @@ class SelfxBillardGameRules(selfx.SelfxGameRules):
     def __init__(self, ctx):
         super(SelfxBillardGameRules, self).__init__(ctx)
 
-    def on_world_setp(self, src, **pwargs):
+    def on_world_setpped(self, src, **pwargs):
         pass
 
 
 class SelfxBillardAgent(selfx.SelfxAgent):
     def __init__(self, ctx):
         super(SelfxBillardAgent, self).__init__(ctx)
+
+        angle = random.random() * 360
+        alpha = np.deg2rad(angle)
+        self.b2 = ctx['outer'].b2.CreateDynamicBody(
+            position=(513, 321),
+            angle=alpha,
+            linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
+            linearDamping=0.0,
+            bullet=True,
+            userData= {
+                'world': ctx['outer'].b2,
+                'type': 'monster',
+                'energy': 100,
+                'ax': 0,
+                'ay': 0,
+                'color': (255, 255, 0)
+            }
+        )
+        self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
+
+    def get_center(self):
+        return self.b2.position
+
+    def on_world_stepped(self, **pwargs):
+        vx, vy = self.b2.linearVelocity
+        vx = vx + self.b2.userData['ax'] * TIME_STEP
+        vy = vy + self.b2.userData['ay'] * TIME_STEP
+        self.b2.linearVelocity = vx, vy
+        self.b2.userData['energy'] = self.b2.userData['energy'] - np.abs(
+            (np.abs(self.b2.userData['ax'] * vx) + np.abs(self.b2.userData['ay'] * vy)) * TIME_STEP
+        )
+
+        for contact in self.b2.contacts:
+            other = contact.other
+            if other.userData['type'] == 'candy':
+                self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * other.mass
+                del other
 
 
 class SelfxBillardScope(selfx.SelfxScope):
