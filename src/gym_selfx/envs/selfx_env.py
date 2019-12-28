@@ -13,12 +13,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ActionSpace(list):
-    def __init__(self, elments):
-        super(ActionSpace, self).__init__(elments)
-        self.n = len(elments)
-
-
 class SelfXEnv(gym.Env, utils.EzPickle):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
@@ -26,20 +20,25 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.toolkit = toolkit
 
         ctx = {}
-        self.inner = self.toolkit.build_world(ctx)
-        self.outer = self.toolkit.build_world(ctx)
-        self.rules = self.toolkit.build_rules(ctx)
+        self.game = self.toolkit.build_game(ctx)
+        self.inner = self.toolkit.build_inner_world(ctx)
+        self.outer = self.toolkit.build_outer_world(ctx)
         self.scope = self.toolkit.build_scope(ctx)
         ctx.update({
             'env': self,
+            'game': self.game,
             'inner': self.inner,
             'outer': self.outer,
-            'rules': self.rules,
         })
+
         self.agent = self.toolkit.build_agent(ctx)
         ctx.update({
             'agent': self.agent,
         })
+
+        self.game.add_affordable(self.agent)
+        self.game.add_affordable(self.outer)
+        self.game.add_affordable(self.inner)
 
         self.x_threshold = self.outer.x_threshold
         self.y_threshold = self.outer.y_threshold
@@ -50,16 +49,18 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.scope.add_changed_handler(self.agent)
         self.outer.add_agent(self.agent)
 
-        self.outer.add_change_handler(self.rules)
-        self.rules.enforce_on(self.outer)
+        self.outer.add_change_handler(self.game)
+        self.game.enforce_on(self.outer)
 
-        self.action_space = ActionSpace([(a, b) for a in self.inner.availabe_actions() for b in self.outer.availabe_actions()])
-
-        self.state = (selfx.IN_GAME, selfx.IN_GAME)
+        self.action_space = self.game.available_actions()
+        self.state_space = self.game.available_states()
 
     def __del__(self):
-        self.inner.step(selfx.QUIT)
-        self.outer.step(selfx.QUIT)
+        self.inner.step(-1)
+        self.outer.step(-1)
+
+    def state(self):
+        return self.game.state()
 
     def step(self, action):
         action1, action2 = action
