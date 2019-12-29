@@ -75,6 +75,18 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+import traceback
+import warnings
+import sys
+
+def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
+
+    log = file if hasattr(file,'write') else sys.stderr
+    traceback.print_stack(file=log)
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+warnings.showwarning = warn_with_traceback
+
 
 env = gym.make('selfx-billard-v0')
 
@@ -367,7 +379,7 @@ def optimize_model():
     # Compute a mask of non-final states and concatenate the batch elements
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                          batch.next_state)), device=device, dtype=torch.uint8)
+                                          batch.next_state)), device=device, dtype=torch.long)
     non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
 
     action_batch_outer = [actions for actions in batch.action]
