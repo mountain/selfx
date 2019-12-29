@@ -56,8 +56,8 @@ class SelfxBillardWorld(selfx.SelfxWorld):
 
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
 
-        self.status = self.available_states()[0]
-        self.action = self.available_actions()[0]
+        self._state = self.available_states()[0]
+        self._action = self.available_actions()[0]
 
     def available_actions(self):
         sacts = super(SelfxBillardWorld, self).availabe_actions()
@@ -70,10 +70,10 @@ class SelfxBillardWorld(selfx.SelfxWorld):
         ) + (sstts[-1],)
 
     def action(self):
-        return self.action
+        return self._action
 
     def state(self):
-        return self.status
+        return self._state
 
     def act(self, actions):
         if self.ctx['agent'].b2.userData['energy'] <= 0:
@@ -110,7 +110,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
 
     def add_candy(self):
         self.b2.CreateDynamicBody(
-            position=(random.random() * 1025, random.random() * 641),
+            position=(self.x_pos, self.y_pos),
             linearVelocity=(np.random.normal() * 500 + 500, np.random.normal() * 500),
             angle=random.random() * 360,
             linearDamping=0.0,
@@ -160,13 +160,33 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
     def available_actions(self):
         sacts = super(SelfxBillardWorld, self).availabe_actions()
         return sacts[:-1] + (
+            'up', 'dn', 'lf', 'rt',
+            'add_obstacle'
         ) + (sacts[-1],)
 
     def step(self, action):
         game = self.ctx['game']
         if type(action) == th.Tensor:
             action = action.item()
-        action = game.available_actions()[action]
+            action = game.action_space()[action]
+            action = action.inner
+        if type(action) == list:
+            action = action[0]
+
+        if action == 'up':
+            self.up()
+
+        if action == 'dn':
+            self.dn()
+
+        if action == 'lf':
+            self.lf()
+
+        if action == 'rt':
+            self.rt()
+
+        if action == 'add_obstacle':
+            self.add_obstacle()
 
         self.b2.Step(TIME_STEP, 10, 10)
 
@@ -182,18 +202,17 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
             self.random_walk(1000)
             self.add_obstacle()
 
-    def available_actions(self):
-        sacts = super(SelfxBillardOuterWorld, self).availabe_actions()
-        return sacts[:-1] + (
-        ) + (sacts[-1],)
-
     def step(self, action):
         game = self.ctx['game']
         if type(action) == th.Tensor:
             action = action.item()
-        action = game.available_actions()[action]
+            action = game.action_space()[action]
+            action = action.outer
+        if type(action) == list:
+            action = action[0]
 
         if random.random() > 0.98 + 0.02 * np.exp(-len(self.b2.bodies)):
+            self.random_walk(1000)
             self.add_candy()
 
         self.b2.Step(TIME_STEP, 10, 10)
@@ -204,25 +223,81 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
             x, y = b.position
             b.position = x % self.x_threshold, y % self.y_threshold
 
-        if action.outer == selfx.NOOP:
+        if action == selfx.NOOP:
             self.scores -= 1.0
-            self.fire_step_event()
+            self.fire_step_event(action=action)
 
-        if action.outer == selfx.QUIT:
+        if action == selfx.QUIT:
             self.status = selfx.OUT_GAME
+
+
+class SelfxBillardAgentMouth(selfx.SelfxAffordable):
+    def __init__(self, ctx):
+        super(SelfxBillardAgentMouth, self).__init__(ctx, 'mouth')
+
+    def available_actions(self):
+        return ('open', 'close')
+
+    def available_states(self):
+        return ('closed', 'opened')
+
+    def open(self):
+        self._state = 'closed'
+
+    def close(self):
+        self._state = 'opened'
+
+
+class SelfxBillardAgentGear(selfx.SelfxAffordable):
+    def __init__(self, ctx):
+        super(SelfxBillardAgentGear, self).__init__(ctx, 'gear')
+
+    def available_actions(self):
+        return ('gear0', 'gear1', 'gear2', 'gear3')
+
+    def available_states(self):
+        return ('gear0', 'gear1', 'gear2', 'gear3')
+
+    def gear0(self):
+        self._state = 'gear0'
+
+    def gear1(self):
+        self._state = 'gear1'
+
+    def gear2(self):
+        self._state = 'gear2'
+
+    def gear3(self):
+        self._state = 'gear3'
+
+
+class SelfxBillardAgentBrake(selfx.SelfxAffordable):
+    def __init__(self, ctx):
+        super(SelfxBillardAgentBrake, self).__init__(ctx, 'brake')
+
+    def available_actions(self):
+        return ('up', 'dn')
+
+    def available_states(self):
+        return ('up', 'dn')
+
+    def up(self):
+        self._state = 'up'
+
+    def down(self):
+        self._state = 'dn'
 
 
 class SelfxBillardAgent(selfx.SelfxAgent):
     def __init__(self, ctx):
         super(SelfxBillardAgent, self).__init__(ctx)
-
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
         self.b2 = ctx['outer'].b2.CreateDynamicBody(
             position=(513, 321),
             angle=alpha,
             linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
-            linearDamping=0.0,
+            linearDamping=0.01,
             bullet=True,
             userData= {
                 'world': ctx['outer'].b2,
@@ -235,19 +310,56 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         )
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
-    def name(self):
-        return 'monster'
+        self.mouth = SelfxBillardAgentMouth(self.ctx)
+        self.gear = SelfxBillardAgentGear(self.ctx)
+        self.brake = SelfxBillardAgentBrake(self.ctx)
+
+    def subaffordables(self):
+        return self.mouth, self.gear, self.brake, self.inner_world
 
     def available_actions(self):
-        return ('idle', 'open-mouth', 'close-mouth')
+        return ('idle')
 
     def available_states(self):
-        return ('idle', 'mouth:opened', 'mouth:closed')
+        return ('idle')
 
     def get_center(self):
         return self.b2.position
 
-    def on_world_stepped(self, **pwargs):
+    def on_stepped(self, src, **pwargs):
+        action = pwargs['action']
+        game = self.ctx['game']
+        if type(action) == th.Tensor:
+            action = action.item()
+            action = game.action_space()[action]
+            action = action[src.name()]
+        if type(action) == list:
+            action = action[0]
+
+        if action.mouth == 'open':
+            self.mouth.open()
+
+        if action.mouth == 'close':
+            self.mouth.close()
+
+        if action.gear == 'gear0':
+            self.gear.gear0()
+
+        if action.gear == 'gear1':
+            self.gear.gear1()
+
+        if action.gear == 'gear2':
+            self.gear.gear2()
+
+        if action.gear == 'gear3':
+            self.gear.gear3()
+
+        if action.brake == 'up':
+            self.brake.up()
+
+        if action.brake == 'dn':
+            self.brake.down()
+
         vx, vy = self.b2.linearVelocity
         vx = vx + self.b2.userData['ax'] * TIME_STEP
         vy = vy + self.b2.userData['ay'] * TIME_STEP
@@ -260,6 +372,9 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             other = contact.other
             if other.userData['type'] == 'candy':
                 self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * other.mass
+                del other
+            if other.userData['type'] == 'obstacle':
+                self.b2.userData['energy'] = self.b2.userData['energy'] - 10
                 del other
 
 
