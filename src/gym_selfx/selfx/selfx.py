@@ -122,11 +122,13 @@ class SelfxGame:
     def act(self, observation, reward, done):
         return random.sample(self.action_space(), 1)
 
+    def reward(self):
+        return 0.0
+
 
 class SelfxWorld(SelfxAffordable):
     def __init__(self, ctx, name):
         super(SelfxWorld, self).__init__(ctx, name)
-        self.scores = 100
         self.step_handlers = []
 
     def availabe_actions(self):
@@ -134,9 +136,6 @@ class SelfxWorld(SelfxAffordable):
 
     def availabe_states(self):
         return (IN_GAME, OUT_GAME)
-
-    def reward(self):
-        return self.scores
 
     def reset(self):
         pass

@@ -64,8 +64,7 @@ import gym
 import math
 import random
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
+
 from collections import namedtuple
 from itertools import count
 from PIL import Image
@@ -78,13 +77,6 @@ import torchvision.transforms as T
 
 
 env = gym.make('selfx-billard-v0')
-
-# set up matplotlib
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-
-plt.ion()
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -213,7 +205,7 @@ class DQN(nn.Module):
 
     def __init__(self, h, w, outputs):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 16, kernel_size=5, stride=2)
+        self.conv1 = nn.Conv2d(6, 16, kernel_size=5, stride=2)
         self.bn1 = nn.BatchNorm2d(16)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
         self.bn2 = nn.BatchNorm2d(32)
@@ -224,6 +216,7 @@ class DQN(nn.Module):
         # and therefore the input image size, so compute it.
         def conv2d_size_out(size, kernel_size = 5, stride = 2):
             return (size - (kernel_size - 1) - 1) // stride  + 1
+
         convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
         convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
         linear_input_size = convw * convh * 32
@@ -267,16 +260,7 @@ def get_screen():
     return resize(screen).unsqueeze(0).to(device)
 
 
-def plot_worlds():
-    plt.figure()
-    plt.imshow(get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(),
-               interpolation='none')
-    plt.title('Example extracted screen')
-    plt.show()
-
-
 env.reset()
-plot_worlds()
 
 ######################################################################
 # Training
@@ -317,15 +301,11 @@ _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
 policy_net_outer = DQN(screen_height, screen_width, n_actions).to(device)
-policy_net_inner = DQN(screen_height, screen_width, n_actions).to(device)
 target_net_outer = DQN(screen_height, screen_width, n_actions).to(device)
-target_net_inner = DQN(screen_height, screen_width, n_actions).to(device)
 target_net_outer.load_state_dict(policy_net_outer.state_dict())
 target_net_outer.eval()
-target_net_inner.load_state_dict(policy_net_inner.state_dict())
-target_net_inner.eval()
 
-optimizer = optim.RMSprop([param for param in policy_net_outer.parameters()] + [param for param in policy_net_inner.parameters()])
+optimizer = optim.RMSprop(policy_net_outer.parameters())
 memory = ReplayMemory(10000)
 
 
@@ -353,23 +333,8 @@ episode_durations = []
 
 
 def plot_durations():
-    plt.figure(2)
-    plt.clf()
     durations_t = torch.tensor(episode_durations, dtype=torch.float)
-    plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Duration')
-    plt.plot(durations_t.numpy())
-    # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
-        means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
-
-    plt.pause(0.001)  # pause a bit so that plots are updated
-    if is_ipython:
-        display.clear_output(wait=True)
-        display.display(plt.gcf())
+    print('duration:', durations_t.numpy()[-1])
 
 
 ######################################################################
@@ -460,7 +425,7 @@ for i_episode in range(num_episodes):
     env.reset()
     last_screen = get_screen()
     current_screen = get_screen()
-    state = current_screen - last_screen
+    state = torch.cat((current_screen, last_screen), dim=1)
     for t in count():
         # Select and perform an action
         action = select_action(state)
@@ -471,7 +436,7 @@ for i_episode in range(num_episodes):
         last_screen = current_screen
         current_screen = get_screen()
         if not done:
-            next_state = current_screen - last_screen
+            next_state = torch.cat((current_screen, last_screen), dim=1)
         else:
             next_state = None
 
@@ -486,7 +451,6 @@ for i_episode in range(num_episodes):
         if done:
             episode_durations.append(t + 1)
             plot_durations()
-            plot_worlds()
             break
     # Update the target network, copying all weights and biases in DQN
     if i_episode % TARGET_UPDATE == 0:
@@ -495,8 +459,6 @@ for i_episode in range(num_episodes):
 print('Complete')
 env.render()
 env.close()
-plt.ioff()
-plt.show()
 
 ######################################################################
 # Here is the diagram that illustrates the overall resulting data flow.

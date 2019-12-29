@@ -41,6 +41,9 @@ class SelfxBillardGame(selfx.SelfxGame):
     def on_setpped(self, src, **pwargs):
         pass
 
+    def reward(self):
+        return self.ctx['agent'].b2.userData['energy']
+
 
 class SelfxBillardWorld(selfx.SelfxWorld):
     def __init__(self, ctx, aname):
@@ -55,7 +58,6 @@ class SelfxBillardWorld(selfx.SelfxWorld):
         self.drawer.install()
 
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
-        print(hash(self.b2))
 
         self._state = self.available_states()[0]
         self._action = self.available_actions()[0]
@@ -95,10 +97,9 @@ class SelfxBillardWorld(selfx.SelfxWorld):
 
     def add_obstacle(self):
         if 30 < self.x_pos < self.x_threshold - 30 and 30 < self.y_pos < self.y_threshold - 30:
-            print(len(self.b2.bodies))
             self.b2.CreateStaticBody(
                 position=(self.x_pos, self.y_pos),
-                shapes=circleShape(radius=random.random() * 30),
+                shapes=circleShape(radius=20),
                 linearDamping=0.0,
                 bullet=True,
                 userData={
@@ -106,15 +107,9 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                     'type': 'obstacle',
                     'ax': 0,
                     'ay': 0,
-                    'color': (192, 128, 156)
+                    'color': (192, 128, 128)
                 },
             )
-            print(hash(self.b2))
-            print(len(self.b2.bodies))
-            print(self.x_pos, self.y_pos)
-            screen = self.render()
-            print(hash(self.drawer))
-            print('after', screen.min(), screen.max(), screen.mean())
 
     def add_candy(self):
         self.b2.CreateDynamicBody(
@@ -128,7 +123,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                 'type': 'candy',
                 'ax': 0,
                 'ay': 0,
-                'color': (128, int(random.random() * 255), int(random.random() * 255))
+                'color': (128, 255, 128)
             },
         ).CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
@@ -204,7 +199,6 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
             self.add_obstacle()
 
         self.b2.Step(TIME_STEP, 10, 10)
-
         for b in self.b2.bodies:
             x, y = b.position
             b.position = x % self.x_threshold, y % self.y_threshold
@@ -213,32 +207,26 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
 class SelfxBillardOuterWorld(SelfxBillardWorld):
     def __init__(self, ctx):
         super(SelfxBillardOuterWorld, self).__init__(ctx, 'outer')
-        for _ in range(30):
+        for _ in range(10):
             self.random_walk(1000)
             self.add_obstacle()
 
     def step(self, **pwargs):
         super(SelfxBillardOuterWorld, self).step(**pwargs)
         action = get_action(self.ctx, self, **pwargs)
+        self.fire_step_event(action=action)
 
         if random.random() > 0.98 + 0.02 * np.exp(-len(self.b2.bodies)):
             self.random_walk(1000)
             self.add_candy()
 
         self.b2.Step(TIME_STEP, 10, 10)
-
-        self.scores = self.ctx['agent'].b2.userData['energy']
-
         for b in self.b2.bodies:
             x, y = b.position
             b.position = x % self.x_threshold, y % self.y_threshold
 
-        if action == selfx.NOOP:
-            self.scores -= 1.0
-            self.fire_step_event(action=action)
-
-        if action == selfx.QUIT:
-            self.status = selfx.OUT_GAME
+        if action == selfx.QUIT or self.ctx['agent'].b2.userData['energy'] < 0:
+            self._state = self.available_states()[-1]
 
 
 class SelfxBillardAgentMouth(selfx.SelfxAffordable):
@@ -417,10 +405,6 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         self.gear = SelfxBillardAgentGear(self.ctx)
         self.brake = SelfxBillardAgentBrake(self.ctx)
         self.steer = SelfxBillardAgentSteer(self.ctx)
-        self.reset()
-
-    def reset(self):
-        super(SelfxBillardAgent, self).reset()
 
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
@@ -433,7 +417,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             userData= {
                 'world': self.ctx['outer'].b2,
                 'type': 'monster',
-                'energy': 100,
+                'energy': 10000,
                 'ax': 0,
                 'ay': 0,
                 'color': (255, 255, 0)
@@ -441,6 +425,8 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         )
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
+    def reset(self):
+        super(SelfxBillardAgent, self).reset()
 
     def subaffordables(self):
         return self.mouth, self.gear, self.brake, self.steer, self.inner_world
@@ -470,17 +456,18 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         vx = vx + self.b2.userData['ax'] * TIME_STEP
         vy = vy + self.b2.userData['ay'] * TIME_STEP
         self.b2.linearVelocity = vx, vy
-        self.b2.userData['energy'] = self.b2.userData['energy'] - np.abs(
-            (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
-        )
+        energy_loss = (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
+        self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
 
         for contact in self.b2.contacts:
             other = contact.other
             if other.userData['type'] == 'obstacle':
                 self.b2.userData['energy'] = self.b2.userData['energy'] - 10
             elif other.userData['type'] == 'candy':
-                self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * other.mass
-                del other
+                mouth_open = self.ctx['game'].state().mouth == 'open'
+                if mouth_open:
+                    self.b2.userData['energy'] = self.b2.userData['energy'] + other.mass
+                    self.b2.DestroyBody(other)
 
 
 class SelfxBillardScope(selfx.SelfxScope):

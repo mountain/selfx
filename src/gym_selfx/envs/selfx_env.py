@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class SelfXEnv(gym.Env, utils.EzPickle):
+    metadata = {'render.modes': ['rgb_array']}
+
     def __init__(self, toolkit):
         self.toolkit = toolkit
 
@@ -57,11 +59,11 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.inner.step(action=action)
         self.outer.step(action=action)
 
-        reward = self.outer.reward()
+        reward = self.game.reward()
 
         _state = self.state()
 
-        episode_over = (_state.outer != selfx.OUT_GAME) and (_state.inner != selfx.OUT_GAME) and random.random() < 0.005
+        episode_over = (_state.outer == selfx.OUT_GAME) or random.random() < 0.005
 
         return _state, reward, episode_over, {}
 
@@ -74,6 +76,4 @@ class SelfXEnv(gym.Env, utils.EzPickle):
     def render(self, mode='rgb_array', close=False):
         arr1 = self.inner.render(mode, close)
         arr2 = self.outer.render(mode, close)
-        print('inner', arr1.min(), arr1.max(), arr1.mean())
-        print('outer', arr2.min(), arr2.max(), arr2.mean())
         return np.concatenate([arr1, arr2], axis=0)
