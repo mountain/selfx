@@ -380,7 +380,7 @@ def optimize_model():
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                           batch.next_state)), device=device, dtype=torch.long)
-    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None], dtype=torch.long, device=device)
 
     action_batch_outer = [actions for actions in batch.action]
     action_batch_outer = torch.cat(action_batch_outer)

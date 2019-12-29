@@ -427,7 +427,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             userData= {
                 'world': self.ctx['outer'].b2,
                 'type': 'monster',
-                'energy': 100000,
+                'energy': 20000,
                 'ax': 0,
                 'ay': 0,
                 'color': (255, 255, 0)
