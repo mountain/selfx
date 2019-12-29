@@ -68,6 +68,7 @@ import numpy as np
 from collections import namedtuple
 from itertools import count
 from PIL import Image
+from gym import wrappers, logger
 
 import torch
 import torch.nn as nn
@@ -87,8 +88,12 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 
 warnings.showwarning = warn_with_traceback
 
+logger.set_level(logger.INFO)
 
 env = gym.make('selfx-billard-v0')
+outdir = 'results/selfx-billard'
+env = wrappers.Monitor(env, directory=outdir, force=True)
+env.seed(0)
 
 # if gpu is to be used
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
