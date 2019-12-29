@@ -378,8 +378,9 @@ def optimize_model():
 
     # Compute a mask of non-final states and concatenate the batch elements
     # (a final state would've been the one after which simulation ended)
-    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.long)
-    non_final_next_states = torch.tensor([s for s in batch.next_state if s is not None], dtype=torch.long, device=device)
+    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
+                                          batch.next_state)), device=device, dtype=torch.long)
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
 
     action_batch_outer = [actions for actions in batch.action]
     action_batch_outer = torch.cat(action_batch_outer)
@@ -401,7 +402,7 @@ def optimize_model():
     # This is merged based on the mask, such that we'll have either the expected
     # state value or 0 in case the state was final.
     next_state_values_outer = torch.zeros(BATCH_SIZE, device=device)
-    next_state_values_outer[non_final_mask] = target_net_outer(non_final_next_states).max(1)[0].detach()
+    next_state_values_outer[non_final_mask == 1] = target_net_outer(non_final_next_states).max(1)[0].detach()
 
     # Compute the expected Q valuesu
     expected_state_action_values_outer = (next_state_values_outer * GAMMA) + reward_batch_outer
