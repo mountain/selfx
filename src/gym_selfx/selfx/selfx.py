@@ -55,6 +55,10 @@ class SelfxAffordable:
     def state(self):
         return self._state
 
+    def reset(self):
+        for sub in self.subaffordables():
+            sub.reset()
+
     def on_stepped(self, src, **pwargs):
         pass
 

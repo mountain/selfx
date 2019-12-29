@@ -55,6 +55,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
         self.drawer.install()
 
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
+        print(hash(self.b2))
 
         self._state = self.available_states()[0]
         self._action = self.available_actions()[0]
@@ -94,6 +95,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
 
     def add_obstacle(self):
         if 30 < self.x_pos < self.x_threshold - 30 and 30 < self.y_pos < self.y_threshold - 30:
+            print(len(self.b2.bodies))
             self.b2.CreateStaticBody(
                 position=(self.x_pos, self.y_pos),
                 shapes=circleShape(radius=random.random() * 30),
@@ -107,6 +109,12 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                     'color': (192, 128, 156)
                 },
             )
+            print(hash(self.b2))
+            print(len(self.b2.bodies))
+            print(self.x_pos, self.y_pos)
+            screen = self.render()
+            print(hash(self.drawer))
+            print('after', screen.min(), screen.max(), screen.mean())
 
     def add_candy(self):
         self.b2.CreateDynamicBody(
@@ -249,6 +257,9 @@ class SelfxBillardAgentMouth(selfx.SelfxAffordable):
     def close(self):
         self._state = 'opened'
 
+    def reset(self):
+        self._state = self.available_states()[0]
+
     def on_stepped(self, src, **pwargs):
         action = get_action(self.ctx, src, **pwargs)
 
@@ -283,6 +294,9 @@ class SelfxBillardAgentGear(selfx.SelfxAffordable):
 
     def value(self):
         return float(self._state[4:])
+
+    def reset(self):
+        self._state = self.available_states()[0]
 
     def on_stepped(self, src, **pwargs):
         action = get_action(self.ctx, src, **pwargs)
@@ -321,6 +335,9 @@ class SelfxBillardAgentBrake(selfx.SelfxAffordable):
             return 0.0
         else:
             return 0.8
+
+    def reset(self):
+        self._state = self.available_states()[0]
 
     def on_stepped(self, src, **pwargs):
         action = get_action(self.ctx, src, **pwargs)
@@ -371,6 +388,9 @@ class SelfxBillardAgentSteer(selfx.SelfxAffordable):
         else:
             return 0.0
 
+    def reset(self):
+        self._state = self.available_states()[0]
+
     def on_stepped(self, src, **pwargs):
         action = get_action(self.ctx, src, **pwargs)
 
@@ -393,22 +413,25 @@ class SelfxBillardAgentSteer(selfx.SelfxAffordable):
 class SelfxBillardAgent(selfx.SelfxAgent):
     def __init__(self, ctx):
         super(SelfxBillardAgent, self).__init__(ctx)
-
         self.mouth = SelfxBillardAgentMouth(self.ctx)
         self.gear = SelfxBillardAgentGear(self.ctx)
         self.brake = SelfxBillardAgentBrake(self.ctx)
         self.steer = SelfxBillardAgentSteer(self.ctx)
+        self.reset()
+
+    def reset(self):
+        super(SelfxBillardAgent, self).reset()
 
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
-        self.b2 = ctx['outer'].b2.CreateDynamicBody(
+        self.b2 = self.ctx['outer'].b2.CreateDynamicBody(
             position=(513, 321),
             angle=alpha,
             linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
             linearDamping=0.0,
             bullet=True,
             userData= {
-                'world': ctx['outer'].b2,
+                'world': self.ctx['outer'].b2,
                 'type': 'monster',
                 'energy': 100,
                 'ax': 0,
@@ -417,6 +440,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             }
         )
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
+
 
     def subaffordables(self):
         return self.mouth, self.gear, self.brake, self.steer, self.inner_world

@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class SelfXEnv(gym.Env, utils.EzPickle):
-    metadata = {'render.modes': ['human', 'rgb_array']}
-
     def __init__(self, toolkit):
         self.toolkit = toolkit
 
@@ -70,9 +68,12 @@ class SelfXEnv(gym.Env, utils.EzPickle):
     def reset(self):
         self.inner.reset()
         self.outer.reset()
-        return self.inner.state(), self.outer.state()
+        self.agent.reset()
+        return self.state()
 
     def render(self, mode='rgb_array', close=False):
         arr1 = self.inner.render(mode, close)
         arr2 = self.outer.render(mode, close)
+        print('inner', arr1.min(), arr1.max(), arr1.mean())
+        print('outer', arr2.min(), arr2.max(), arr2.mean())
         return np.concatenate([arr1, arr2], axis=0)
