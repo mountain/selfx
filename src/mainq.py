@@ -442,8 +442,8 @@ for i_episode in range(num_episodes):
     env.reset()
     last_screen = get_screen()
     current_screen = get_screen()
-    state = current_screen - last_screen
-    state = torch.cat((current_screen, last_screen, state), dim=1)
+    diff = current_screen - last_screen
+    state = torch.cat((current_screen, last_screen, diff), dim=1)
     for t in count():
         # Select and perform an action
         action = select_action(state)
@@ -453,9 +453,9 @@ for i_episode in range(num_episodes):
         # Observe new state
         last_screen = current_screen
         current_screen = get_screen()
-        state = current_screen - last_screen
+        diff = current_screen - last_screen
         if not done:
-            next_state = torch.cat((current_screen, last_screen, state), dim=1)
+            next_state = torch.cat((current_screen, last_screen, diff), dim=1)
         else:
             next_state = None
 
@@ -474,6 +474,7 @@ for i_episode in range(num_episodes):
     # Update the target network, copying all weights and biases in DQN
     if i_episode % TARGET_UPDATE == 0:
         target_net_outer.load_state_dict(policy_net_outer.state_dict())
+
 
 print('Complete')
 env.render()
