@@ -48,14 +48,9 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.outer.add_agent(self.agent)
 
         self.outer.add_change_handler(self.game)
-        self.game.enforce_on(self.outer)
 
         self.action_space = self.game.action_space()
         self.state_space = self.game.state_space()
-
-    def __del__(self):
-        self.inner.step(-1)
-        self.outer.step(-1)
 
     def state(self):
         return self.game.state()

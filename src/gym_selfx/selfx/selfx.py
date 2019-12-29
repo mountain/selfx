@@ -55,7 +55,7 @@ class SelfxAffordable:
     def state(self):
         return self._state
 
-    def on_world_stepped(self, **pwargs):
+    def on_stepped(self, src, **pwargs):
         pass
 
     def add_change_handler(self, handler):
@@ -75,9 +75,9 @@ class SelfxGame:
         self.states_list = []
 
     def add_affordable(self, affordable):
-        self.affordables.append(affordable)
         for sub in affordable.subaffordables():
             self.affordables.append(sub)
+        self.affordables.append(affordable)
 
         self.ctx['outer'].add_step_handler(affordable)
         affordable.add_change_handler(self.ctx['outer'])
@@ -115,8 +115,8 @@ class SelfxGame:
         s = collections.namedtuple('State', fields)._make([a.state() for a in self.affordables])
         return s
 
-    def enforce_on(self, world):
-        pass
+    def act(self, observation, reward, done):
+        return random.sample(self.action_space(), 1)
 
 
 class SelfxWorld(SelfxAffordable):
@@ -138,16 +138,16 @@ class SelfxWorld(SelfxAffordable):
         pass
 
     def step(self, action):
-        if action[self._name] == -1:
-            self.state = OUT_GAME
+        self.fire_step_event( action=action)
 
-        self.fire_step_event(action=action)
-
-    def render(self, mode='human', close=False):
+    def render(self, mode='rgb_array', close=False):
         return np.zeros([100, 100, 3], dtype='uint8')
 
     def add_agent(self, agent):
         self.agent = agent
+
+    def get_snapshot(self):
+        return self.render()
 
     def add_step_handler(self, handler):
         if handler is not self and handler not in self.step_handlers:
@@ -166,9 +166,6 @@ class SelfxAgent(SelfxAffordable):
     def get_center(self):
         return 0, 0
 
-    def act(self, observation, reward, done):
-        return random.sample(self.available_actions(), 1)
-
     def add_move_handler(self, handler):
         pass
 
@@ -176,6 +173,7 @@ class SelfxAgent(SelfxAffordable):
 class SelfxScope:
     def __init__(self, ctx):
         self.ctx = ctx
+        self.handlers = []
 
     def get_mask(self, snapshot):
         return np.ones(snapshot.shape)
@@ -195,5 +193,3 @@ class SelfxScope:
     def fire_changed_event(self, **pwargs):
         for h in self.handlers:
             h.on_scope_changed(self, **pwargs)
-
-

@@ -84,7 +84,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
     def reset(self):
         self.drawer.clear_screen()
 
-    def render(self, mode='human', close=False):
+    def render(self, mode='rgb_array', close=False):
         if mode == 'rgb_array':
             self.drawer.clear_screen()
             self.drawer.draw_world(self.b2)
@@ -249,6 +249,15 @@ class SelfxBillardAgentMouth(selfx.SelfxAffordable):
     def close(self):
         self._state = 'opened'
 
+    def on_stepped(self, src, **pwargs):
+        action = pwargs['action']
+
+        if action.mouth == 'open':
+            self.open()
+
+        if action.mouth == 'close':
+            self.close()
+
 
 class SelfxBillardAgentGear(selfx.SelfxAffordable):
     def __init__(self, ctx):
@@ -272,6 +281,21 @@ class SelfxBillardAgentGear(selfx.SelfxAffordable):
     def gear3(self):
         self._state = 'gear3'
 
+    def on_stepped(self, src, **pwargs):
+        action = pwargs['action']
+
+        if action.gear == 'gear0':
+            self.gear0()
+
+        if action.gear == 'gear1':
+            self.gear1()
+
+        if action.gear == 'gear2':
+            self.gear2()
+
+        if action.gear == 'gear3':
+            self.gear3()
+
 
 class SelfxBillardAgentBrake(selfx.SelfxAffordable):
     def __init__(self, ctx):
@@ -288,6 +312,15 @@ class SelfxBillardAgentBrake(selfx.SelfxAffordable):
 
     def down(self):
         self._state = 'dn'
+
+    def on_stepped(self, src, **pwargs):
+        action = pwargs['action']
+
+        if action.brake == 'up':
+            self.up()
+
+        if action.brake == 'dn':
+            self.down()
 
 
 class SelfxBillardAgent(selfx.SelfxAgent):
@@ -338,24 +371,6 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         if type(action) == list:
             action = action[0]
 
-        if action.mouth == 'open':
-            self.mouth.open()
-
-        if action.mouth == 'close':
-            self.mouth.close()
-
-        if action.gear == 'gear0':
-            self.gear.gear0()
-
-        if action.gear == 'gear1':
-            self.gear.gear1()
-
-        if action.gear == 'gear2':
-            self.gear.gear2()
-
-        if action.gear == 'gear3':
-            self.gear.gear3()
-
         if action.brake == 'up':
             self.brake.up()
 
@@ -372,11 +387,10 @@ class SelfxBillardAgent(selfx.SelfxAgent):
 
         for contact in self.b2.contacts:
             other = contact.other
-            if other.userData['type'] == 'candy':
-                self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * other.mass
-                del other
             if other.userData['type'] == 'obstacle':
                 self.b2.userData['energy'] = self.b2.userData['energy'] - 10
+            elif other.userData['type'] == 'candy':
+                self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * other.mass
                 del other
 
 

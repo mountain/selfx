@@ -18,7 +18,7 @@ if __name__ == '__main__':
     outdir = 'results/selfx-billard'
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
-    agent = env.agent
+    game = env.game
 
     episode_count = 100
     reward = 0
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     for i in range(episode_count):
         ob = env.reset()
         while True:
-            action = agent.act(ob, reward, done)
+            action = game.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
             if done:
                 break
