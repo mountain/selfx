@@ -371,12 +371,6 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         if type(action) == list:
             action = action[0]
 
-        if action.brake == 'up':
-            self.brake.up()
-
-        if action.brake == 'dn':
-            self.brake.down()
-
         vx, vy = self.b2.linearVelocity
         vx = vx + self.b2.userData['ax'] * TIME_STEP
         vy = vy + self.b2.userData['ay'] * TIME_STEP
