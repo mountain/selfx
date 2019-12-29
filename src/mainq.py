@@ -267,13 +267,16 @@ def get_screen():
     return resize(screen).unsqueeze(0).to(device)
 
 
-env.reset()
-plt.figure()
-plt.imshow(get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(),
-           interpolation='none')
-plt.title('Example extracted screen')
-plt.show()
+def plot_worlds():
+    plt.figure()
+    plt.imshow(get_screen().cpu().squeeze(0).permute(1, 2, 0).numpy(),
+               interpolation='none')
+    plt.title('Example extracted screen')
+    plt.show()
 
+
+env.reset()
+plot_worlds()
 
 ######################################################################
 # Training
@@ -341,10 +344,9 @@ def select_action(state):
             # second column on max result is index of where max element was
             # found, so we pick action with the larger expected reward.
             expected_reward_outer = policy_net_outer(state)
-            expected_reward_inner = policy_net_inner(state)
-            return expected_reward_outer.max(1)[1].view(1, 1), expected_reward_inner.max(1)[1].view(1, 1)
+            return expected_reward_outer.max(1)[1].view(1, 1)
     else:
-        return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long), torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
+        return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
 
 
 episode_durations = []
@@ -401,13 +403,10 @@ def optimize_model():
     # (a final state would've been the one after which simulation ended)
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                           batch.next_state)), device=device, dtype=torch.uint8)
-    non_final_next_states = torch.cat([s for s in batch.next_state
-                                                if s is not None])
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
 
-    action_batch_outer = [actions[0] for actions in batch.action]
+    action_batch_outer = [actions for actions in batch.action]
     action_batch_outer = torch.cat(action_batch_outer)
-    action_batch_inner = [actions[1] for actions in batch.action]
-    action_batch_inner = torch.cat(action_batch_inner)
 
     reward_batch_outer = batch.reward
     reward_batch_outer = torch.cat(reward_batch_outer)
@@ -418,7 +417,6 @@ def optimize_model():
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken. These are the actions which would've been taken
     # for each batch state according to policy_net
-    state_action_values_inner = policy_net_inner(state_batch).gather(1, action_batch_inner)
     state_action_values_outer = policy_net_outer(state_batch).gather(1, action_batch_outer)
 
     # Compute V(s_{t+1}) for all next states.
@@ -428,22 +426,16 @@ def optimize_model():
     # state value or 0 in case the state was final.
     next_state_values_outer = torch.zeros(BATCH_SIZE, device=device)
     next_state_values_outer[non_final_mask] = target_net_outer(non_final_next_states).max(1)[0].detach()
-    next_state_values_inner = torch.zeros(BATCH_SIZE, device=device)
-    next_state_values_inner[non_final_mask] = target_net_inner(non_final_next_states).max(1)[0].detach()
 
     # Compute the expected Q valuesu
     expected_state_action_values_outer = (next_state_values_outer * GAMMA) + reward_batch_outer
-    expected_state_action_values_inner = (next_state_values_inner * GAMMA)
 
     # Compute Huber loss
-    loss = F.smooth_l1_loss(state_action_values_outer, expected_state_action_values_outer.unsqueeze(1)) +\
-           F.smooth_l1_loss(state_action_values_inner, expected_state_action_values_inner.unsqueeze(1))
+    loss = F.smooth_l1_loss(state_action_values_outer, expected_state_action_values_outer.unsqueeze(1))
 
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
-    for param in policy_net_inner.parameters():
-        param.grad.data.clamp_(-1, 1)
     for param in policy_net_outer.parameters():
         param.grad.data.clamp_(-1, 1)
     optimizer.step()
@@ -494,11 +486,11 @@ for i_episode in range(num_episodes):
         if done:
             episode_durations.append(t + 1)
             plot_durations()
+            plot_worlds()
             break
     # Update the target network, copying all weights and biases in DQN
     if i_episode % TARGET_UPDATE == 0:
         target_net_outer.load_state_dict(policy_net_outer.state_dict())
-        target_net_inner.load_state_dict(policy_net_inner.state_dict())
 
 print('Complete')
 env.render()

@@ -104,7 +104,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                     'type': 'obstacle',
                     'ax': 0,
                     'ay': 0,
-                    'color': (int(random.random() * 127) + 128, 128, int(random.random() * 127) + 128)
+                    'color': (192, 128, 156)
                 },
             )
 
@@ -153,6 +153,18 @@ class SelfxBillardWorld(selfx.SelfxWorld):
                 self.rt()
 
 
+def get_action(ctx, src, **pwargs):
+    action = pwargs['action']
+    game = ctx['game']
+    if type(action) == th.Tensor:
+        action = action.item()
+        action = game.action_space()[action]
+    if type(action) == list:
+        action = action[0]
+
+    return action
+
+
 class SelfxBillardInnerWorld(SelfxBillardWorld):
     def __init__(self, ctx):
         super(SelfxBillardInnerWorld, self).__init__(ctx, 'inner')
@@ -164,28 +176,23 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
             'add_obstacle'
         ) + (sacts[-1],)
 
-    def step(self, action):
-        game = self.ctx['game']
-        if type(action) == th.Tensor:
-            action = action.item()
-            action = game.action_space()[action]
-            action = action.inner
-        if type(action) == list:
-            action = action[0]
+    def step(self, **pwargs):
+        super(SelfxBillardInnerWorld, self).step(pwargs)
+        action = get_action(self.ctx, self, **pwargs)
 
-        if action == 'up':
+        if action.inner == 'up':
             self.up()
 
-        if action == 'dn':
+        if action.inner == 'dn':
             self.dn()
 
-        if action == 'lf':
+        if action.inner == 'lf':
             self.lf()
 
-        if action == 'rt':
+        if action.inner == 'rt':
             self.rt()
 
-        if action == 'add_obstacle':
+        if action.inner == 'add_obstacle':
             self.add_obstacle()
 
         self.b2.Step(TIME_STEP, 10, 10)
@@ -202,14 +209,9 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
             self.random_walk(1000)
             self.add_obstacle()
 
-    def step(self, action):
-        game = self.ctx['game']
-        if type(action) == th.Tensor:
-            action = action.item()
-            action = game.action_space()[action]
-            action = action.outer
-        if type(action) == list:
-            action = action[0]
+    def step(self, **pwargs):
+        super(SelfxBillardOuterWorld, self).step(**pwargs)
+        action = get_action(self.ctx, self, **pwargs)
 
         if random.random() > 0.98 + 0.02 * np.exp(-len(self.b2.bodies)):
             self.random_walk(1000)
@@ -230,8 +232,6 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
         if action == selfx.QUIT:
             self.status = selfx.OUT_GAME
 
-        super(SelfxBillardOuterWorld, self).step(action=action)
-
 
 class SelfxBillardAgentMouth(selfx.SelfxAffordable):
     def __init__(self, ctx):
@@ -250,7 +250,7 @@ class SelfxBillardAgentMouth(selfx.SelfxAffordable):
         self._state = 'opened'
 
     def on_stepped(self, src, **pwargs):
-        action = pwargs['action']
+        action = get_action(self.ctx, src, **pwargs)
 
         if action.mouth == 'open':
             self.open()
@@ -281,8 +281,11 @@ class SelfxBillardAgentGear(selfx.SelfxAffordable):
     def gear3(self):
         self._state = 'gear3'
 
+    def value(self):
+        return float(self._state[4:])
+
     def on_stepped(self, src, **pwargs):
-        action = pwargs['action']
+        action = get_action(self.ctx, src, **pwargs)
 
         if action.gear == 'gear0':
             self.gear0()
@@ -313,8 +316,14 @@ class SelfxBillardAgentBrake(selfx.SelfxAffordable):
     def down(self):
         self._state = 'dn'
 
+    def value(self):
+        if self._state == 'up':
+            return 0.0
+        else:
+            return 0.8
+
     def on_stepped(self, src, **pwargs):
-        action = pwargs['action']
+        action = get_action(self.ctx, src, **pwargs)
 
         if action.brake == 'up':
             self.up()
@@ -323,16 +332,80 @@ class SelfxBillardAgentBrake(selfx.SelfxAffordable):
             self.down()
 
 
+class SelfxBillardAgentSteer(selfx.SelfxAffordable):
+    def __init__(self, ctx):
+        super(SelfxBillardAgentSteer, self).__init__(ctx, 'steer')
+
+    def available_actions(self):
+        return ('l2', 'l1', 'o', 'r1', 'r2')
+
+    def available_states(self):
+        return ('l2', 'l1', 'o', 'r1', 'r2')
+
+    def l2(self):
+        self._state = 'l2'
+
+    def l1(self):
+        self._state = 'l1'
+
+    def o(self):
+        self._state = 'o'
+
+    def r2(self):
+        self._state = 'r2'
+
+    def r1(self):
+        self._state = 'r1'
+
+    def value(self):
+        if self._state == 'o':
+            return 0.0
+        elif self._state == 'l2':
+            return np.pi / 3
+        elif self._state == 'l1':
+            return np.pi / 6
+        elif self._state == 'r2':
+            return - np.pi / 3
+        elif self._state == 'r1':
+            return - np.pi / 6
+        else:
+            return 0.0
+
+    def on_stepped(self, src, **pwargs):
+        action = get_action(self.ctx, src, **pwargs)
+
+        if action.steer == 'o':
+            self.o()
+
+        if action.steer == 'l1':
+            self.l1()
+
+        if action.steer == 'l2':
+            self.l2()
+
+        if action.steer == 'r1':
+            self.r1()
+
+        if action.steer == 'r2':
+            self.r2()
+
+
 class SelfxBillardAgent(selfx.SelfxAgent):
     def __init__(self, ctx):
         super(SelfxBillardAgent, self).__init__(ctx)
+
+        self.mouth = SelfxBillardAgentMouth(self.ctx)
+        self.gear = SelfxBillardAgentGear(self.ctx)
+        self.brake = SelfxBillardAgentBrake(self.ctx)
+        self.steer = SelfxBillardAgentSteer(self.ctx)
+
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
         self.b2 = ctx['outer'].b2.CreateDynamicBody(
             position=(513, 321),
             angle=alpha,
             linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
-            linearDamping=0.01,
+            linearDamping=0.0,
             bullet=True,
             userData= {
                 'world': ctx['outer'].b2,
@@ -345,38 +418,36 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         )
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
-        self.mouth = SelfxBillardAgentMouth(self.ctx)
-        self.gear = SelfxBillardAgentGear(self.ctx)
-        self.brake = SelfxBillardAgentBrake(self.ctx)
-
     def subaffordables(self):
-        return self.mouth, self.gear, self.brake, self.inner_world
+        return self.mouth, self.gear, self.brake, self.steer, self.inner_world
 
     def available_actions(self):
-        return ('idle')
+        return ('idle',)
 
     def available_states(self):
-        return ('idle')
+        return ('idle',)
 
     def get_center(self):
         return self.b2.position
 
     def on_stepped(self, src, **pwargs):
-        action = pwargs['action']
-        game = self.ctx['game']
-        if type(action) == th.Tensor:
-            action = action.item()
-            action = game.action_space()[action]
-            action = action[src.name()]
-        if type(action) == list:
-            action = action[0]
+        super(SelfxBillardAgent, self).on_stepped(src, **pwargs)
+
+        gear_value = self.gear.value()
+        brake_value = self.brake.value()
+        steer_value = self.steer.value()
 
         vx, vy = self.b2.linearVelocity
+        angle = np.arctan2(vy, vx)
+        fx = -0.01 * vx - brake_value * vx
+        fy = -0.01 * vy - brake_value * vy
+        self.b2.userData['ax'] = fx + 0.1 * gear_value * np.cos(angle + steer_value)
+        self.b2.userData['ay'] = fy + 0.1 * gear_value * np.sin(angle + steer_value)
         vx = vx + self.b2.userData['ax'] * TIME_STEP
         vy = vy + self.b2.userData['ay'] * TIME_STEP
         self.b2.linearVelocity = vx, vy
         self.b2.userData['energy'] = self.b2.userData['energy'] - np.abs(
-            (np.abs(self.b2.userData['ax'] * vx) + np.abs(self.b2.userData['ay'] * vy)) * TIME_STEP
+            (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
         )
 
         for contact in self.b2.contacts:

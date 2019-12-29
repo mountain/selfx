@@ -138,7 +138,7 @@ class SelfxWorld(SelfxAffordable):
         pass
 
     def step(self, action):
-        self.fire_step_event( action=action)
+        self.fire_step_event(action=action)
 
     def render(self, mode='rgb_array', close=False):
         return np.zeros([100, 100, 3], dtype='uint8')

@@ -56,8 +56,8 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         return self.game.state()
 
     def step(self, action):
-        self.inner.step(action)
-        self.outer.step(action)
+        self.inner.step(action=action)
+        self.outer.step(action=action)
 
         reward = self.outer.reward()
 
@@ -65,14 +65,14 @@ class SelfXEnv(gym.Env, utils.EzPickle):
 
         episode_over = (_state.outer != selfx.OUT_GAME) and (_state.inner != selfx.OUT_GAME) and random.random() < 0.005
 
-        return (_state.outer, _state.inner), reward, episode_over, {}
+        return _state, reward, episode_over, {}
 
     def reset(self):
         self.inner.reset()
         self.outer.reset()
         return self.inner.state(), self.outer.state()
 
-    def render(self, mode='human', close=False):
+    def render(self, mode='rgb_array', close=False):
         arr1 = self.inner.render(mode, close)
         arr2 = self.outer.render(mode, close)
         return np.concatenate([arr1, arr2], axis=0)
