@@ -38,7 +38,7 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
 
-    def on_world_setpped(self, src, **pwargs):
+    def on_setpped(self, src, **pwargs):
         pass
 
 
@@ -229,6 +229,8 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
 
         if action == selfx.QUIT:
             self.status = selfx.OUT_GAME
+
+        super(SelfxBillardOuterWorld, self).step(action=action)
 
 
 class SelfxBillardAgentMouth(selfx.SelfxAffordable):

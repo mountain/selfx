@@ -150,7 +150,7 @@ class SelfxWorld(SelfxAffordable):
         self.agent = agent
 
     def add_step_handler(self, handler):
-        if handler not in self.step_handlers:
+        if handler is not self and handler not in self.step_handlers:
             self.step_handlers.append(handler)
 
     def fire_step_event(self, **pwargs):
@@ -167,7 +167,7 @@ class SelfxAgent(SelfxAffordable):
         return 0, 0
 
     def act(self, observation, reward, done):
-        return [random.sample(self.available_actions(), 1), random.sample(self.inner_world.availabe_actions(), 1)]
+        return random.sample(self.available_actions(), 1)
 
     def add_move_handler(self, handler):
         pass
