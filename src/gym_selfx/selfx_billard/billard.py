@@ -87,6 +87,9 @@ class SelfxBillardWorld(selfx.SelfxWorld):
     def reset(self):
         self.drawer.clear_screen()
 
+        for b in self.b2.bodies:
+            self.b2.DestroyBody(b)
+
     def render(self, mode='rgb_array', close=False):
         if mode == 'rgb_array':
             self.drawer.clear_screen()
@@ -207,6 +210,10 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
 class SelfxBillardOuterWorld(SelfxBillardWorld):
     def __init__(self, ctx):
         super(SelfxBillardOuterWorld, self).__init__(ctx, 'outer')
+        self.reset()
+
+    def reset(self):
+        super(SelfxBillardOuterWorld, self).reset()
         for _ in range(10):
             self.random_walk(1000)
             self.add_obstacle()
@@ -405,7 +412,10 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         self.gear = SelfxBillardAgentGear(self.ctx)
         self.brake = SelfxBillardAgentBrake(self.ctx)
         self.steer = SelfxBillardAgentSteer(self.ctx)
+        self.reset()
 
+    def reset(self):
+        super(SelfxBillardAgent, self).reset()
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
         self.b2 = self.ctx['outer'].b2.CreateDynamicBody(
@@ -424,9 +434,6 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             }
         )
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
-
-    def reset(self):
-        super(SelfxBillardAgent, self).reset()
 
     def subaffordables(self):
         return self.mouth, self.gear, self.brake, self.steer, self.inner_world
