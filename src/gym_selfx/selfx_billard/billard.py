@@ -13,6 +13,9 @@ from Box2D.Box2D import (b2CircleShape as circleShape, b2World)
 TARGET_FPS = 60
 TIME_STEP = 1.0 / TARGET_FPS
 
+XTHRESHOLD = 1024
+YTHRESHOLD = 512
+
 
 class SelfxBillardToolkit(selfx.SelfxToolkit):
     def __init__(self):
@@ -49,8 +52,8 @@ class SelfxBillardWorld(selfx.SelfxWorld):
     def __init__(self, ctx, aname):
         super(SelfxBillardWorld, self).__init__(ctx, aname)
 
-        self.x_threshold = 1029
-        self.y_threshold = 645
+        self.x_threshold = XTHRESHOLD
+        self.y_threshold = YTHRESHOLD
         self.x_pos = self.x_threshold // 2
         self.y_pos = self.y_threshold // 2
 

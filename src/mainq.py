@@ -139,8 +139,7 @@ if __name__ == '__main__':
 
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
-        diff = current_screen - last_screen
-        state = torch.cat((current_screen, last_screen, diff), dim=1)
+        state = torch.cat((current_screen, last_screen), dim=1)
 
         for t in count():
             action = select_action(state)
@@ -149,9 +148,8 @@ if __name__ == '__main__':
 
             last_screen = current_screen
             current_screen = get_screen(env, device)
-            diff = current_screen - last_screen
             if not done:
-                next_state = torch.cat((current_screen, last_screen, diff), dim=1)
+                next_state = torch.cat((current_screen, last_screen), dim=1)
             else:
                 next_state = None
 
