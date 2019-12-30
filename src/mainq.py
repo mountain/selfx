@@ -158,11 +158,11 @@ if __name__ == '__main__':
 
             optimize_model()
             if done:
-                print('duration:', t + 1)
+                print(f'duration[{i_episode:04d}]:{t + 1:04d}')
                 break
 
         if i_episode % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
-            torch.save(policy_net.state_dict(), f'%s/episode_{i_episode:04d}.duration_{t + 1:03d}.mdl')
+            torch.save(policy_net.state_dict(), f'%s/episode_{i_episode:04d}.duration_{t + 1:04d}.mdl')
 
     env.close()
