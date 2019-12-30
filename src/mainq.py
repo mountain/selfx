@@ -91,7 +91,7 @@ opt = parser.parse_args()
 
 cuda = True if torch.cuda.is_available() else False
 if cuda:
-    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+    os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
 
 
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
@@ -451,7 +451,7 @@ def optimize_model():
 # duration improvements.
 #
 
-num_episodes = 500
+num_episodes = opt.n
 for i_episode in range(num_episodes):
     # Initialize the environment and state
     env.reset()
