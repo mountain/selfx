@@ -27,23 +27,24 @@ Setup the enviroment
 --------------------
 
 ```bash
+git clone https://github.com/mountain/selfx.git
 cd selfx
 . hello
 ```
 
 Testing the gym env
 --------------------
+Assuming the current directory is in the root of ``selfx``
 
 ```bash
-cd selfx
 python -m main
 ```
 
 Trainning the program
 --------------------
+Assuming the current directory is in the root of ``selfx``
 
 ```bash
-cd selfx
 python -m mainq -g 0 -n 1000
 ```
 
