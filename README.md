@@ -37,6 +37,7 @@ Testing the gym env
 Assuming the current directory is in the root of ``selfx``
 
 ```bash
+. hello
 python -m main
 ```
 
@@ -45,6 +46,7 @@ Trainning the program
 Assuming the current directory is in the root of ``selfx``
 
 ```bash
+. hello
 python -m mainq -g 0 -n 1000
 ```
 
