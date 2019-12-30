@@ -79,6 +79,20 @@ import torchvision.transforms as T
 import traceback
 import warnings
 import sys
+import os
+import argparse
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-n", type=int, default=1000, help="number of epochs of training")
+parser.add_argument("-g", type=str, default='0', help="index of gpu")
+opt = parser.parse_args()
+
+
+cuda = True if torch.cuda.is_available() else False
+if cuda:
+    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+
 
 def warn_with_traceback(message, category, filename, lineno, file=None, line=None):
 
@@ -89,6 +103,7 @@ def warn_with_traceback(message, category, filename, lineno, file=None, line=Non
 warnings.showwarning = warn_with_traceback
 
 logger.set_level(logger.INFO)
+
 
 env = gym.make('selfx-billard-v0')
 outdir = 'results/selfx-billard'
