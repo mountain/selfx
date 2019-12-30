@@ -5,8 +5,14 @@
 import gym_selfx.selfx
 
 import gym
+import argparse
 
 from gym import wrappers, logger
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-n", type=int, default=1000, help="number of epochs of training")
+opt = parser.parse_args()
 
 
 if __name__ == '__main__':
@@ -20,7 +26,7 @@ if __name__ == '__main__':
     env.seed(0)
     game = env.game
 
-    episode_count = 100
+    episode_count = opt.n
     reward = 0
     done = False
 
