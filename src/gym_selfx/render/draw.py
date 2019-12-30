@@ -24,6 +24,8 @@ from Box2D import (b2Color, b2DistanceJoint, b2MouseJoint, b2PulleyJoint)
 from Box2D.Box2D import (b2_staticBody as staticBody, b2_dynamicBody as dynamicBody, b2_kinematicBody as kinematicBody, b2PolygonShape as polygonShape,
                       b2CircleShape as circleShape, b2LoopShape as loopShape, b2EdgeShape as edgeShape)
 
+import matplotlib.pyplot as plt
+
 
 def cvcolor(color):
     return int(255.0 * color[2]), int(255.0 * color[1]), int(255.0 * color[0])
@@ -47,6 +49,7 @@ class OpencvDrawFuncs(object):
         self._fill_polygon = fill_polygon
         self._flip_y = flip_y
         self.screen = np.zeros((self._h, self._w, 3), np.uint8)
+        self.screen2 = None
 
     def install(self):
         polygonShape.draw = self._draw_polygon
@@ -58,6 +61,7 @@ class OpencvDrawFuncs(object):
         for body in world.bodies:
             for fixture in body.fixtures:
                 fixture.shape.draw(body, fixture)
+
         for joint in world.joints:
             self._draw_joint(joint)
 

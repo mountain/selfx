@@ -199,6 +199,7 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
             self.rt()
 
         if action.inner == 'add_obstacle':
+            selfx.debug = True
             self.add_obstacle()
 
         self.b2.Step(TIME_STEP, 10, 10)

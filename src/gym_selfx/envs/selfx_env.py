@@ -74,6 +74,8 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         return self.state()
 
     def render(self, mode='rgb_array', close=False):
+        self.inner.drawer.install()
         arr1 = self.inner.render(mode, close)
+        self.outer.drawer.install()
         arr2 = self.outer.render(mode, close)
         return np.concatenate([arr1, arr2], axis=0)
