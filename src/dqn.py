@@ -6,26 +6,21 @@ This code is originally derived from
 
 """
 
-import os
-import argparse
-import gym
-import math
 import random
 import numpy as np
 
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
 from collections import namedtuple
-from itertools import count
 from PIL import Image
-from gym import wrappers, logger
 
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
+
+Transition = namedtuple('Transition', (
+    'state', 'action', 'next_state', 'reward'
+))
 
 
 class ReplayMemory(object):
