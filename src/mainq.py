@@ -165,5 +165,6 @@ if __name__ == '__main__':
 
         if i_episode % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
+            torch.save(policy_net.state_dict(), f'%s/episode_{i_episode:04d}.duration_{t + 1:03d}.mdl')
 
     env.close()
