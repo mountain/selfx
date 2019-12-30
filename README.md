@@ -50,4 +50,13 @@ Assuming the current directory is in the root of ``selfx``
 python -m mainq -g 0 -n 1000
 ```
 
+Inference a model
+------------------
+Assuming the current directory is in the root of ``selfx``
+
+```bash
+. hello
+python -m demo
+```
+
 
