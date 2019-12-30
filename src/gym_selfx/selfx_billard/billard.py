@@ -227,7 +227,7 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
         action = get_action(self.ctx, self, **pwargs)
         self.fire_step_event(action=action)
 
-        if random.random() > 0.70 + 0.30 * np.exp(-len(self.b2.bodies)):
+        if random.random() > np.exp(-len(self.b2.bodies)):
             self.random_walk(1000)
             self.add_candy()
 
