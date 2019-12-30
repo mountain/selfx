@@ -470,12 +470,15 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         energy_loss = (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
         self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
 
+        mouth_open = self.ctx['game'].state().mouth == 'open'
+        if mouth_open:
+            self.b2.userData['color'] = (255, 192, 0)
+
         for contact in self.b2.contacts:
             other = contact.other
             if other.userData['type'] == 'obstacle':
                 self.b2.userData['energy'] = self.b2.userData['energy'] - 10
             elif other.userData['type'] == 'candy':
-                mouth_open = self.ctx['game'].state().mouth == 'open'
                 if mouth_open:
                     self.b2.userData['energy'] = self.b2.userData['energy'] + other.mass
                     self.b2.DestroyBody(other)
