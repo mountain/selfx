@@ -18,6 +18,7 @@ logger.set_level(logger.INFO)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=16, help="number of demo examples")
+parser.add_argument("-g", type=str, default='0', help="index of gpu")
 opt = parser.parse_args()
 
 cuda = True if torch.cuda.is_available() else False
