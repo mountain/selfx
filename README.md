@@ -11,11 +11,11 @@ The code in ``selfx_billard`` is a reference example. In this example, the agent
 is like a plankton living in water swarmed by small algae (the green dots), and the ``obstacles``(the red dots)
 are also part of the enviroment.
 
-Both idle and swimming will cost energy, the only way to survive is to eat the green dots to charge energy.
+Both the action of idle and swimming will cost energy, the only way for monster to survive is to eat algae to charge energy.
 
-The longger the monster live, the higher the game score.
+The longer the monster live, the higher the game score is.
 
-In the output video, the screen is divided into upper part and bottom part. The upper part is the inner world,
+In the output video, the screen is divided into two parts. The upper part is the inner world,
 while the bottom part is the outer world.
 
 
