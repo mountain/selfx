@@ -19,6 +19,7 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 
+from pathlib import Path
 from itertools import count
 from gym import wrappers, logger
 from dqn import DQN, ReplayMemory, Transition, get_screen
@@ -163,6 +164,11 @@ if __name__ == '__main__':
 
         if i_episode % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
-            torch.save(policy_net.state_dict(), f'%s/episode_{i_episode:04d}.duration_{t + 1:04d}.mdl')
+            model_path = Path(outdir)
+            torch.save(policy_net.state_dict(), model_path / f'duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
+            glb = list(model_path.glob('*.mdl'))
+            if len(glb) > 20:
+                for p in sorted(glb)[:-15]:
+                    os.unlink(p)
 
     env.close()
