@@ -5,24 +5,27 @@ The nature of self is a hot topic in human history, rich but debating. Reinforce
 * the inner world: a virtual world set up by the agent
 
 Setup and training
-======
+===================
 This project follow the standard of [gym](https://gym.openai.com/) proposed by OpenAI.
 
-##Setup the enviroment
+Setup the enviroment
+--------------------
 
 ```bash
 cd selfx
 . hello
 ```
 
-##Testing the gym env
+Testing the gym env
+--------------------
 
 ```bash
 cd selfx
 python -m main
 ```
 
-##Trainning the program
+Trainning the program
+--------------------
 
 ```bash
 cd selfx
