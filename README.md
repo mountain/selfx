@@ -18,6 +18,9 @@ The longer the monster live, the higher the game score is.
 In the output video, the screen is divided into two parts. The upper part is the inner world,
 while the bottom part is the outer world.
 
+![demo][demo_img]
+
+[demo_img]: https://github.com/mountain/selfx/raw/master/demo.png
 
 Setup and training
 ===================
