@@ -20,7 +20,10 @@ while the bottom part is the outer world.
 
 ![demo][demo_img]
 
-[demo_img]: https://github.com/mountain/selfx/raw/master/demo.png
+[demo_img]: https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png
+
+As the above picture shows, at the beginning of training, the monster will draw randomly on the inner world.
+ 
 
 Setup and training
 ===================
