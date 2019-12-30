@@ -473,6 +473,8 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         mouth_open = self.ctx['game'].state().mouth == 'open'
         if mouth_open:
             self.b2.userData['color'] = (255, 192, 0)
+        else:
+            self.b2.userData['color'] = (255, 255, 0)
 
         for contact in self.b2.contacts:
             other = contact.other
