@@ -16,7 +16,7 @@ import torchvision.transforms as T
 
 from collections import namedtuple
 from PIL import Image
-from senet import SEResNet, BasicResidualSEBlock
+from gym_selfx.nn.senet import SEResNet, BasicResidualSEBlock
 
 
 Transition = namedtuple('Transition', (

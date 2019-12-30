@@ -22,7 +22,7 @@ import torch.nn.functional as F
 from pathlib import Path
 from itertools import count
 from gym import wrappers, logger
-from dqn import DQN, ReplayMemory, Transition, get_screen
+from gym_selfx.nn.dqn import DQN, ReplayMemory, Transition, get_screen
 
 
 BATCH_SIZE = 128
