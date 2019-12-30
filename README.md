@@ -18,9 +18,7 @@ The longer the monster live, the higher the game score is.
 In the output video, the screen is divided into two parts. The upper part is the inner world,
 while the bottom part is the outer world.
 
-![demo][demo_img]
-
-[demo_img]: https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png
+<img src="https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png" alt="demo" width="460px" height="460px" style="margin: 100px">
 
 As the above picture shows, at the beginning of training, the monster will draw randomly on the inner world.
  
