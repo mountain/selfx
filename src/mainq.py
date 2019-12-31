@@ -22,7 +22,7 @@ import torch.nn.functional as F
 from pathlib import Path
 from itertools import count
 from gym import wrappers, logger
-from gym_selfx.nn.dqn import DQN, ReplayMemory, Transition, get_screen
+from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_screen
 
 
 BATCH_SIZE = 128
@@ -54,8 +54,8 @@ init_screen = get_screen(env, device)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
-policy_net = DQN(screen_height, screen_width, n_actions).to(device)
-target_net = DQN(screen_height, screen_width, n_actions).to(device)
+policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
+target_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
