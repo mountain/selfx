@@ -62,7 +62,12 @@ if __name__ == '__main__':
         state = torch.cat((current_screen, last_screen), dim=1)
         while True:
             action = env.game.act(state, reward, done)
-            state, reward, done, info = env.step(action)
+            _, reward, done, info = env.step(action)
+
+            last_screen = current_screen
+            current_screen = get_screen(env, device)
+            state = torch.cat((current_screen, last_screen), dim=1)
+
             if done:
                 break
             env.render(mode='rgb_array')
