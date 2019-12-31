@@ -60,7 +60,10 @@ if __name__ == '__main__':
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
         state = torch.cat((current_screen, last_screen), dim=1)
+        i = 0
         while True:
+            i += 1
+
             action = env.game.act(state, reward, done)
             _, reward, done, info = env.step(action)
 
@@ -68,7 +71,7 @@ if __name__ == '__main__':
             current_screen = get_screen(env, device)
             state = torch.cat((current_screen, last_screen), dim=1)
 
-            if done:
+            if done or i > 3000:
                 break
             env.render(mode='rgb_array')
 
