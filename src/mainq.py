@@ -138,6 +138,8 @@ if __name__ == '__main__':
 
     for i_episode in range(opt.n):
         env.reset()
+        reward = 0
+        done = False
 
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)

@@ -50,16 +50,16 @@ def select_action(observation, reward, done):
 
 if __name__ == '__main__':
     episode_count = opt.n
-    done = False
 
     for i in range(episode_count):
         env.reset()
         env.game.policy = select_action
+        reward = 0
+        done = False
 
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
         state = torch.cat((current_screen, last_screen), dim=1)
-        reward = 0
         while True:
             action = env.game.act(state, reward, done)
             state, reward, done, info = env.step(action)
