@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import random
 
 import gym
 import gym_selfx.selfx.selfx as selfx
@@ -63,7 +62,7 @@ class SelfXEnv(gym.Env, utils.EzPickle):
 
         _state = self.state()
 
-        episode_over = (_state.outer == selfx.OUT_GAME) or random.random() < 0.005
+        episode_over = self.game.exit_condition() or self.game.force_condition()
 
         return _state, reward, episode_over, {}
 

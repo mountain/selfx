@@ -4,11 +4,8 @@ import random
 import numpy as np
 
 
-IN_GAME = 'in_game'
-OUT_GAME = 'out_game'
-
 NOOP = 'noop'
-QUIT = 'quit'
+IDLE = 'idle'
 
 
 class SelfxToolkit:
@@ -44,10 +41,10 @@ class SelfxAffordable:
         return ()
 
     def available_actions(self):
-        return ()
+        return (NOOP, )
 
     def available_states(self):
-        return ()
+        return (IDLE, )
 
     def action(self):
         return self._action
@@ -77,6 +74,7 @@ class SelfxGame:
         self.affordables = []
         self.actions_list = []
         self.states_list = []
+        self.policy = None
 
     def add_affordable(self, affordable):
         for sub in affordable.subaffordables():
@@ -120,10 +118,19 @@ class SelfxGame:
         return s
 
     def act(self, observation, reward, done):
-        return random.sample(self.action_space(), 1)
+        if self.policy is None:
+            return random.sample(self.action_space(), 1)
+        else:
+            return self.policy(observation, reward, done)
 
     def reward(self):
         return 0.0
+
+    def exit_condition(self):
+        return False
+
+    def force_condition(self):
+        return random.random() < 0.005
 
 
 class SelfxWorld(SelfxAffordable):
@@ -132,10 +139,10 @@ class SelfxWorld(SelfxAffordable):
         self.step_handlers = []
 
     def availabe_actions(self):
-        return (NOOP, QUIT)
+        return ()
 
     def availabe_states(self):
-        return (IN_GAME, OUT_GAME)
+        return ()
 
     def reset(self):
         pass

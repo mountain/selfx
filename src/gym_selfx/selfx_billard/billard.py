@@ -41,11 +41,14 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
 
-    def on_setpped(self, src, **pwargs):
-        pass
-
     def reward(self):
         return self.ctx['agent'].b2.userData['energy']
+
+    def exit_condition(self):
+        return self.ctx['agent'].b2.userData['energy'] <= 0
+
+    def force_condition(self):
+        return random.random() < 1 / TARGET_FPS / 7
 
 
 class SelfxBillardWorld(selfx.SelfxWorld):
@@ -65,27 +68,11 @@ class SelfxBillardWorld(selfx.SelfxWorld):
         self._state = self.available_states()[0]
         self._action = self.available_actions()[0]
 
-    def available_actions(self):
-        sacts = super(SelfxBillardWorld, self).availabe_actions()
-        return sacts[:-1] + (
-        ) + (sacts[-1],)
-
-    def available_states(self):
-        sstts = super(SelfxBillardWorld, self).availabe_states()
-        return sstts[:-1] + (
-        ) + (sstts[-1],)
-
     def action(self):
         return self._action
 
     def state(self):
         return self._state
-
-    def act(self, actions):
-        if self.ctx['agent'].b2.userData['energy'] <= 0:
-            return selfx.QUIT
-        else:
-            return selfx.NOOP
 
     def reset(self):
         self.drawer.clear_screen()
@@ -179,11 +166,10 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
         super(SelfxBillardInnerWorld, self).__init__(ctx, 'inner')
 
     def available_actions(self):
-        sacts = super(SelfxBillardWorld, self).availabe_actions()
-        return sacts[:-1] + (
+        return (
             'up', 'dn', 'lf', 'rt',
             'add_obstacle'
-        ) + (sacts[-1],)
+        )
 
     def step(self, **pwargs):
         super(SelfxBillardInnerWorld, self).step(pwargs)
@@ -227,7 +213,7 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
         action = get_action(self.ctx, self, **pwargs)
         self.fire_step_event(action=action)
 
-        if random.random() > np.exp(-len(self.b2.bodies)):
+        if random.random() > 1 - np.exp(-len(self.b2.bodies) / 30):
             self.random_walk(1000)
             self.add_candy()
 
@@ -235,9 +221,6 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
         for b in self.b2.bodies:
             x, y = b.position
             b.position = x % self.x_threshold, y % self.y_threshold
-
-        if action == selfx.QUIT or self.ctx['agent'].b2.userData['energy'] < 0:
-            self._state = self.available_states()[-1]
 
 
 class SelfxBillardAgentMouth(selfx.SelfxAffordable):
@@ -470,7 +453,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         energy_loss = (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
         self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
 
-        mouth_open = self.ctx['game'].state().mouth == 'open'
+        mouth_open = self.ctx['game'].state().mouth == 'opened'
         if mouth_open:
             self.b2.userData['color'] = (255, 192, 0)
         else:
@@ -483,7 +466,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             elif other.userData['type'] == 'candy':
                 if mouth_open:
                     self.b2.userData['energy'] = self.b2.userData['energy'] + other.mass
-                    self.b2.DestroyBody(other)
+                    self.ctx['outer'].b2.DestroyBody(other)
 
 
 class SelfxBillardScope(selfx.SelfxScope):
