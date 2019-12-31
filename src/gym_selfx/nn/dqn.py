@@ -63,7 +63,7 @@ class DQN(nn.Module):
 class SimpleDQN(nn.Module):
 
     def __init__(self, h, w, outputs):
-        super(DQN, self).__init__()
+        super(SimpleDQN, self).__init__()
         self.conv1 = nn.Conv2d(6, 32, kernel_size=5, stride=2)
         self.bn1 = nn.BatchNorm2d(32)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=5, stride=2)
