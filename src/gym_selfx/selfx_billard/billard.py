@@ -443,14 +443,16 @@ class SelfxBillardAgent(selfx.SelfxAgent):
 
         vx, vy = self.b2.linearVelocity
         angle = np.arctan2(vy, vx)
-        fx = -0.01 * vx - brake_value * vx
-        fy = -0.01 * vy - brake_value * vy
-        self.b2.userData['ax'] = fx + 0.1 * gear_value * np.cos(angle + steer_value)
-        self.b2.userData['ay'] = fy + 0.1 * gear_value * np.sin(angle + steer_value)
-        vx = vx + self.b2.userData['ax'] * TIME_STEP
-        vy = vy + self.b2.userData['ay'] * TIME_STEP
+        fx = gear_value * np.cos(angle + steer_value)
+        fy = gear_value * np.sin(angle + steer_value)
+        ax = (-0.01 * vx - brake_value * vx + fx) / self.b2.mass
+        ay = (-0.01 * vy - brake_value * vy + fy) / self.b2.mass
+        vx = vx + ax * TIME_STEP
+        vy = vy + ay * TIME_STEP
         self.b2.linearVelocity = vx, vy
-        energy_loss = (np.abs(fx * vx) + np.abs(fy * vy)) * TIME_STEP
+        energy_loss = (fx * vx + fy * vy) * TIME_STEP
+        self.b2.userData['ax'] = ax
+        self.b2.userData['ay'] = ay
         self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
 
         mouth_open = self.ctx['game'].state().mouth == 'opened'
