@@ -42,7 +42,7 @@ policy_net = DQN(screen_height, screen_width, n_actions).to(device)
 policy_net.load_state_dict(torch.load(sorted(list(model_path.glob('*.mdl')))[-1], map_location=device))
 
 
-def select_action(state):
+def select_action(observation, reward, done):
     with torch.no_grad():
         expected_reward = policy_net(state)
         return expected_reward.max(1)[1].view(1, 1)
@@ -54,12 +54,15 @@ if __name__ == '__main__':
 
     for i in range(episode_count):
         env.reset()
+        env.game.policy = select_action
+
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
         state = torch.cat((current_screen, last_screen), dim=1)
+        reward = 0
         while True:
-            action = select_action(state)
-            _, _, done, _ = env.step(action)
+            action = env.game.act(state, reward, done)
+            state, reward, done, info = env.step(action)
             if done:
                 break
             env.render(mode='rgb_array')

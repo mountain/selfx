@@ -64,7 +64,7 @@ memory = ReplayMemory(10000)
 optimizer = optim.RMSprop(policy_net.parameters())
 
 
-def select_action(state):
+def select_action(observation, reward, done):
     global steps_done
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
@@ -72,7 +72,7 @@ def select_action(state):
     steps_done += 1
     if sample > eps_threshold:
         with torch.no_grad():
-            expected_reward = policy_net(state)
+            expected_reward = policy_net(observation)
             return expected_reward.max(1)[1].view(1, 1)
     else:
         return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
@@ -120,6 +120,7 @@ if __name__ == '__main__':
     env = wrappers.Monitor(env, directory=outdir, force=True)
     env.seed(0)
     game = env.game
+    game.policy = select_action
 
     ## code in main.py for comparison
     #
@@ -143,7 +144,7 @@ if __name__ == '__main__':
         state = torch.cat((current_screen, last_screen), dim=1)
 
         for t in count():
-            action = select_action(state)
+            action = game.act(state, reward, done)
             _, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
 
