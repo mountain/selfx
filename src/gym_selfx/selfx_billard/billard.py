@@ -445,8 +445,8 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         angle = np.arctan2(vy, vx)
         fx = gear_value * np.cos(angle + steer_value)
         fy = gear_value * np.sin(angle + steer_value)
-        ax = (-0.01 * vx - brake_value * vx + fx) / self.b2.mass
-        ay = (-0.01 * vy - brake_value * vy + fy) / self.b2.mass
+        ax = (-0.01 * vx - 0.1 * brake_value * vx + fx) / self.b2.mass
+        ay = (-0.01 * vy - 0.1 * brake_value * vy + fy) / self.b2.mass
         vx = vx + ax * TIME_STEP
         vy = vy + ay * TIME_STEP
         self.b2.linearVelocity = vx, vy
