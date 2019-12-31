@@ -11,7 +11,7 @@ import os
 
 from pathlib import Path
 from gym import wrappers, logger
-from gym_selfx.nn.dqn import DQN, get_screen
+from gym_selfx.nn.dqn import SimpleDQN, get_screen
 
 
 logger.set_level(logger.INFO)
@@ -38,7 +38,7 @@ _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
 model_path = Path('results/selfx-billard')
-policy_net = DQN(screen_height, screen_width, n_actions).to(device)
+policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
 policy_net.load_state_dict(torch.load(sorted(list(model_path.glob('*.mdl')))[-1], map_location=device))
 
 
