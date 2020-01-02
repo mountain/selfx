@@ -3,6 +3,8 @@
 import random
 import numpy as np
 import torch as th
+import cv2
+import matplotlib.pyplot as plt
 
 import gym_selfx.selfx.selfx as selfx
 
@@ -30,8 +32,11 @@ class SelfxBillardToolkit(selfx.SelfxToolkit):
     def build_game(self, ctx):
         return SelfxBillardGame(ctx)
 
-    def build_agent(self, inner_world):
-        return SelfxBillardAgent(inner_world)
+    def build_agent(self, inner_world, eye):
+        return SelfxBillardAgent(inner_world, eye)
+
+    def build_eye(self, ctx):
+        return SelfxBillardEye(ctx)
 
     def build_scope(self, ctx):
         return SelfxBillardScope(ctx)
@@ -60,9 +65,7 @@ class SelfxBillardWorld(selfx.SelfxWorld):
         self.x_pos = self.x_threshold // 2
         self.y_pos = self.y_threshold // 2
 
-        self.drawer = OpencvDrawFuncs(w=self.x_threshold, h=self.y_threshold, ppm=0.9)
-        self.drawer.install()
-
+        self.drawer = OpencvDrawFuncs(w=self.x_threshold, h=self.y_threshold, ppm=1.0)
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
 
         self._state = self.available_states()[0]
@@ -204,9 +207,10 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
 
     def reset(self):
         super(SelfxBillardOuterWorld, self).reset()
-        for _ in range(10):
-            self.random_walk(1000)
-            self.add_obstacle()
+        #for _ in range(10):
+        #    self.random_walk(1000)
+        #    self.add_obstacle()
+        self.add_obstacle()
 
     def step(self, **pwargs):
         super(SelfxBillardOuterWorld, self).step(**pwargs)
@@ -393,8 +397,8 @@ class SelfxBillardAgentSteer(selfx.SelfxAffordable):
 
 
 class SelfxBillardAgent(selfx.SelfxAgent):
-    def __init__(self, ctx):
-        super(SelfxBillardAgent, self).__init__(ctx)
+    def __init__(self, ctx, eye):
+        super(SelfxBillardAgent, self).__init__(ctx, eye)
         self.mouth = SelfxBillardAgentMouth(self.ctx)
         self.gear = SelfxBillardAgentGear(self.ctx)
         self.brake = SelfxBillardAgentBrake(self.ctx)
@@ -406,7 +410,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         angle = random.random() * 360
         alpha = np.deg2rad(angle)
         self.b2 = self.ctx['outer'].b2.CreateDynamicBody(
-            position=(513, 321),
+            position=(self.ctx['outer'].x_threshold / 2, self.ctx['outer'].y_threshold / 2),
             angle=alpha,
             linearVelocity=(np.random.normal() * 500, np.random.normal() * 500),
             linearDamping=0.0,
@@ -431,8 +435,11 @@ class SelfxBillardAgent(selfx.SelfxAgent):
     def available_states(self):
         return ('idle',)
 
-    def get_center(self):
+    def center(self):
         return self.b2.position
+
+    def direction(self):
+        return self.b2.linearVelocity
 
     def on_stepped(self, src, **pwargs):
         super(SelfxBillardAgent, self).on_stepped(src, **pwargs)
@@ -469,6 +476,84 @@ class SelfxBillardAgent(selfx.SelfxAgent):
                 if mouth_open:
                     self.b2.userData['energy'] = self.b2.userData['energy'] + other.mass
                     self.ctx['outer'].b2.DestroyBody(other)
+
+
+class SelfxBillardEye(selfx.SelfxEye):
+    def __init__(self, ctx):
+        super(SelfxBillardEye, self).__init__(ctx)
+        self.x_threshold = XTHRESHOLD // 16
+        self.y_threshold = YTHRESHOLD // 16
+
+    def view(self, world, center, direction):
+        w = world.render()
+        x, y = center
+        assert(w.max() > 0)
+        assert(w[int(y), int(x), 0] > 0)
+        assert(w[int(y), int(x), 1] > 0)
+
+        w = np.tile(w, [7, 7, 1])
+        hgt, wdt = w.shape[0], w.shape[1]
+        phi = np.arctan2(direction[1], direction[0])
+        x, y = x + 3 * world.x_threshold, y + 3 * world.y_threshold
+        assert(w.max() > 0)
+        assert(w[int(y), int(x), 0] > 0)
+        assert(w[int(y), int(x), 1] > 0)
+
+        trans = cv2.getRotationMatrix2D((x, y), np.rad2deg(phi), 1.0)
+
+        ps = np.array([
+            [0, 0, 1],
+            [hgt, 0, 1],
+            [0, wdt, 1],
+            [hgt, wdt, 1],
+        ]).T
+        rs = np.dot(trans, ps)
+        hgh = int(rs[0].max() - min(rs[0].min(), 0) + 0.5)
+        wdt = int(rs[1].max() - min(rs[1].min(), 0) + 0.5)
+        warped = cv2.warpAffine(w, trans, (hgh, wdt), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
+        fig = plt.figure(figsize=(20, 20))
+        plt.imshow(warped.astype(np.uint8))
+        plt.show()
+        plt.close(fig=fig)
+
+        rho = np.sqrt(self.y_threshold * self.y_threshold + self.x_threshold * self.x_threshold)
+        theta = np.arctan2(self.y_threshold, self.x_threshold)
+
+        def transform(points):
+            rs = np.dot(trans, points)
+            ys = rs[0]
+            xs = rs[1]
+            y0, y1 = ys.min(), ys.max()
+            x0, x1 = xs.min(), xs.max()
+            y0, y1 = int(y0 + 0.5 * np.sign(y0)), int(y1 + 0.5 * np.sign(y1))
+            x0, x1 = int(x0 + 0.5 * np.sign(x0)), int(x1 + 0.5 * np.sign(x1))
+            assert(y1 - y0 == 2 * self.y_threshold)
+            assert(x1 - x0 == 2 * self.x_threshold)
+            assert (y0 >= 0)
+            assert (x0 >= 0)
+            return y0, y1, x0, x1
+
+        y0, y1, x0, x1 = transform(np.array([
+            [y + rho * np.sin(theta - phi), x + rho * np.cos(theta - phi), 1],
+            [y + rho * np.sin(np.pi - theta - phi), x + rho * np.cos(np.pi - theta - phi), 1],
+            [y + rho * np.sin(-theta - phi), x + rho * np.cos(-theta - phi), 1],
+            [y + rho * np.sin(np.pi + theta - phi), x + rho * np.cos(np.pi + theta - phi), 1],
+        ]).T)
+        fig = plt.figure(figsize=(20, 20))
+        plt.imshow(warped.astype(np.uint8))
+        plt.show()
+        plt.close(fig=fig)
+
+        v = warped[y0:y1, x0:x1, :]
+        fig = plt.figure(figsize=(20, 20))
+        plt.imshow(v.astype(np.uint8))
+        plt.show()
+        plt.close(fig=fig)
+
+        assert(v[self.y_threshold, self.x_threshold, 0] > 0)
+        assert(v[self.y_threshold, self.x_threshold, 1] > 0)
+
+        return v
 
 
 class SelfxBillardScope(selfx.SelfxScope):

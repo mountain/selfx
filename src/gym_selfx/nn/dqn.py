@@ -99,6 +99,7 @@ resize = T.Compose([
 def get_screen(env, device):
     screen = env.render(mode='rgb_array').transpose((2, 0, 1))
     _, screen_height, screen_width = screen.shape
-    screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
+    lmt = screen_height // 3 * 2
+    screen = np.ascontiguousarray(screen[0:lmt, :, :], dtype=np.float32) / 255
     screen = torch.from_numpy(screen)
     return resize(screen).unsqueeze(0).to(device)

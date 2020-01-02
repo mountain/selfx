@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import cv2
 
 import gym
 import gym_selfx.selfx.selfx as selfx
@@ -30,7 +31,8 @@ class SelfXEnv(gym.Env, utils.EzPickle):
             'outer': self.outer,
         })
 
-        self.agent = self.toolkit.build_agent(ctx)
+        eye = self.toolkit.build_eye(ctx)
+        self.agent = self.toolkit.build_agent(ctx, eye)
         ctx.update({
             'agent': self.agent,
         })
@@ -77,4 +79,10 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         arr1 = self.inner.render(mode, close)
         self.outer.drawer.install()
         arr2 = self.outer.render(mode, close)
-        return np.concatenate([arr1, arr2], axis=0)
+        view = self.agent.eye.view(self.outer, self.agent.center(), self.agent.direction())
+        r = cv2.resize(view[:, :, 0], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        g = cv2.resize(view[:, :, 1], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        b = cv2.resize(view[:, :, 2], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        view = np.concatenate([r, g, b], axis=2)
+
+        return np.concatenate([view, arr1, arr2], axis=0)

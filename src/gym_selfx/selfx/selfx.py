@@ -18,8 +18,11 @@ class SelfxToolkit:
     def build_outer_world(self, ctx):
         return SelfxWorld(ctx, 'outer')
 
-    def build_agent(self, ctx):
-        return SelfxAgent(ctx)
+    def build_agent(self, ctx, eye):
+        return SelfxAgent(ctx, eye)
+
+    def build_eye(self, ctx):
+        return SelfxEye(ctx)
 
     def build_scope(self, ctx):
         return SelfxScope(ctx)
@@ -169,15 +172,28 @@ class SelfxWorld(SelfxAffordable):
 
 
 class SelfxAgent(SelfxAffordable):
-    def __init__(self, ctx):
+    def __init__(self, ctx, eye):
         super(SelfxAgent, self).__init__(ctx, 'monster')
         self.inner_world = ctx['inner']
+        self.eye = eye
 
-    def get_center(self):
+    def center(self):
+        return 0, 0
+
+    def direction(self):
         return 0, 0
 
     def add_move_handler(self, handler):
         pass
+
+
+class SelfxEye:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    def view(self, world, center, direction):
+        w = world.render()
+        return np.zeros(w.shape)
 
 
 class SelfxScope:
