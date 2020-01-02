@@ -207,10 +207,9 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
 
     def reset(self):
         super(SelfxBillardOuterWorld, self).reset()
-        #for _ in range(10):
-        #    self.random_walk(1000)
-        #    self.add_obstacle()
-        self.add_obstacle()
+        for _ in range(10):
+            self.random_walk(1000)
+            self.add_obstacle()
 
     def step(self, **pwargs):
         super(SelfxBillardOuterWorld, self).step(**pwargs)
@@ -481,79 +480,66 @@ class SelfxBillardAgent(selfx.SelfxAgent):
 class SelfxBillardEye(selfx.SelfxEye):
     def __init__(self, ctx):
         super(SelfxBillardEye, self).__init__(ctx)
-        self.x_threshold = XTHRESHOLD // 16
-        self.y_threshold = YTHRESHOLD // 16
+        self.x_threshold = XTHRESHOLD // 2
+        self.y_threshold = YTHRESHOLD // 2
+
+        self.drawer = OpencvDrawFuncs(w=self.x_threshold, h=self.y_threshold, ppm=1.0)
+        self.b2 = b2World(gravity=(0, 0), doSleep=True)
+
+    def reset(self):
+        self.drawer.clear_screen()
+        for b in self.b2.bodies:
+            self.b2.DestroyBody(b)
+
+        self.ownbody = self.b2.CreateStaticBody(
+            position=(self.x_threshold / 2, self.y_threshold / 4 * 3),
+            shapes=circleShape(radius=5.0),
+            linearDamping=0.0,
+            bullet=True,
+            userData= {
+                'color': (255, 255, 0)
+            }
+        )
 
     def view(self, world, center, direction):
-        w = world.render()
-        x, y = center
-        assert(w.max() > 0)
-        assert(w[int(y), int(x), 0] > 0)
-        assert(w[int(y), int(x), 1] > 0)
+        self.reset()
 
-        w = np.tile(w, [7, 7, 1])
-        hgt, wdt = w.shape[0], w.shape[1]
-        phi = np.arctan2(direction[1], direction[0])
-        x, y = x + 3 * world.x_threshold, y + 3 * world.y_threshold
-        assert(w.max() > 0)
-        assert(w[int(y), int(x), 0] > 0)
-        assert(w[int(y), int(x), 1] > 0)
+        x0, y0 = center
+        rx, ry = direction
+        theta = np.arctan2(ry, rx)
+        rx, ry = np.cos(theta), np.sin(theta)
+        px, py = np.cos(theta + np.pi / 2), np.sin(theta + np.pi / 2)
+        for b in world.b2.bodies:
+            x, y = b.position
+            dx, dy = x - x0, y - y0
+            alngr = rx * dx + ry * dy
+            alngp = np.abs(px * dx + py * dy)
 
-        trans = cv2.getRotationMatrix2D((x, y), np.rad2deg(phi), 1.0)
+            if alngp < self.x_threshold / 2 and - self.y_threshold / 4 < alngr < self.y_threshold / 4 * 3:
+                if b.userData['type'] == 'candy':
+                    self.b2.CreateStaticBody(
+                        position=(alngr, alngp),
+                        shapes=circleShape(radius=5.0),
+                        linearDamping=0.0,
+                        bullet=True,
+                        userData= {
+                            'color': (128, 255, 128)
+                        }
+                    )
+                if b.userData['type'] == 'obstacle':
+                    self.b2.CreateStaticBody(
+                        position=(alngr, alngp),
+                        shapes=circleShape(radius=20.0),
+                        linearDamping=0.0,
+                        bullet=True,
+                        userData= {
+                            'color': (192, 128, 128)
+                        }
+                    )
 
-        ps = np.array([
-            [0, 0, 1],
-            [hgt, 0, 1],
-            [0, wdt, 1],
-            [hgt, wdt, 1],
-        ]).T
-        rs = np.dot(trans, ps)
-        hgh = int(rs[0].max() - min(rs[0].min(), 0) + 0.5)
-        wdt = int(rs[1].max() - min(rs[1].min(), 0) + 0.5)
-        warped = cv2.warpAffine(w, trans, (hgh, wdt), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0))
-        fig = plt.figure(figsize=(20, 20))
-        plt.imshow(warped.astype(np.uint8))
-        plt.show()
-        plt.close(fig=fig)
-
-        rho = np.sqrt(self.y_threshold * self.y_threshold + self.x_threshold * self.x_threshold)
-        theta = np.arctan2(self.y_threshold, self.x_threshold)
-
-        def transform(points):
-            rs = np.dot(trans, points)
-            ys = rs[0]
-            xs = rs[1]
-            y0, y1 = ys.min(), ys.max()
-            x0, x1 = xs.min(), xs.max()
-            y0, y1 = int(y0 + 0.5 * np.sign(y0)), int(y1 + 0.5 * np.sign(y1))
-            x0, x1 = int(x0 + 0.5 * np.sign(x0)), int(x1 + 0.5 * np.sign(x1))
-            assert(y1 - y0 == 2 * self.y_threshold)
-            assert(x1 - x0 == 2 * self.x_threshold)
-            assert (y0 >= 0)
-            assert (x0 >= 0)
-            return y0, y1, x0, x1
-
-        y0, y1, x0, x1 = transform(np.array([
-            [y + rho * np.sin(theta - phi), x + rho * np.cos(theta - phi), 1],
-            [y + rho * np.sin(np.pi - theta - phi), x + rho * np.cos(np.pi - theta - phi), 1],
-            [y + rho * np.sin(-theta - phi), x + rho * np.cos(-theta - phi), 1],
-            [y + rho * np.sin(np.pi + theta - phi), x + rho * np.cos(np.pi + theta - phi), 1],
-        ]).T)
-        fig = plt.figure(figsize=(20, 20))
-        plt.imshow(warped.astype(np.uint8))
-        plt.show()
-        plt.close(fig=fig)
-
-        v = warped[y0:y1, x0:x1, :]
-        fig = plt.figure(figsize=(20, 20))
-        plt.imshow(v.astype(np.uint8))
-        plt.show()
-        plt.close(fig=fig)
-
-        assert(v[self.y_threshold, self.x_threshold, 0] > 0)
-        assert(v[self.y_threshold, self.x_threshold, 1] > 0)
-
-        return v
+        self.drawer.install()
+        self.drawer.draw_world(self.b2)
+        return self.drawer.screen
 
 
 class SelfxBillardScope(selfx.SelfxScope):

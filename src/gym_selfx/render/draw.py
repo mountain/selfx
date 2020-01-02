@@ -49,7 +49,6 @@ class OpencvDrawFuncs(object):
         self._fill_polygon = fill_polygon
         self._flip_y = flip_y
         self.screen = np.zeros((self._h, self._w, 3), np.uint8)
-        self.screen2 = None
 
     def install(self):
         polygonShape.draw = self._draw_polygon
