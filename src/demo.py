@@ -30,7 +30,7 @@ device = torch.device(int(opt.g) if torch.cuda.is_available() else "cpu")
 
 env = gym.make('selfx-billard-v0')
 outdir = 'demo/selfx-billard'
-env = wrappers.Monitor(env, directory=outdir, force=True)
+env = wrappers.Monitor(env, directory=outdir, force=True, mode='evaluation')
 env.seed(0)
 env.reset()
 
