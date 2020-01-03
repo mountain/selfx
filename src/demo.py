@@ -19,6 +19,7 @@ logger.set_level(logger.INFO)
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=16, help="number of demo examples")
 parser.add_argument("-g", type=str, default='0', help="index of gpu")
+parser.add_argument("-m", type=str, default='', help="model path")
 opt = parser.parse_args()
 
 cuda = True if torch.cuda.is_available() else False
@@ -37,9 +38,14 @@ init_screen = get_screen(env, device)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
+if opt.m == '':
+    pattern = '*.mdl'
+else:
+    pattern = opt.m
+
 model_path = Path('results/selfx-billard')
 policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
-policy_net.load_state_dict(torch.load(sorted(list(model_path.glob('*.mdl')))[-1], map_location=device))
+policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device))
 
 
 def select_action(observation, reward, done):
