@@ -77,7 +77,7 @@ if __name__ == '__main__':
             current_screen = get_screen(env, device)
             state = torch.cat((current_screen, last_screen), dim=1)
 
-            if done or i > 3000:
+            if done or i > 9000:
                 break
             env.render(mode='rgb_array')
 
