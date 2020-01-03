@@ -80,9 +80,9 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.outer.drawer.install()
         arr2 = self.outer.render(mode, close)
         view = self.agent.eye.view(self.outer, self.agent.center(), self.agent.direction())
-        r = cv2.resize(view[:, :, 0], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
-        g = cv2.resize(view[:, :, 1], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
-        b = cv2.resize(view[:, :, 2], (arr2.shape[0], arr2.shape[1]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        r = cv2.resize(view[:, :, 0], (arr2.shape[1], arr2.shape[0]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        g = cv2.resize(view[:, :, 1], (arr2.shape[1], arr2.shape[0]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
+        b = cv2.resize(view[:, :, 2], (arr2.shape[1], arr2.shape[0]), interpolation=cv2.INTER_CUBIC).reshape(arr2.shape[0], arr2.shape[1], 1)
         view = np.concatenate([r, g, b], axis=2)
 
         return np.concatenate([view, arr1, arr2], axis=0)

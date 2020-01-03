@@ -3,8 +3,6 @@
 import random
 import numpy as np
 import torch as th
-import cv2
-import matplotlib.pyplot as plt
 
 import gym_selfx.selfx.selfx as selfx
 
@@ -480,8 +478,8 @@ class SelfxBillardAgent(selfx.SelfxAgent):
 class SelfxBillardEye(selfx.SelfxEye):
     def __init__(self, ctx):
         super(SelfxBillardEye, self).__init__(ctx)
-        self.x_threshold = XTHRESHOLD // 2
-        self.y_threshold = YTHRESHOLD // 2
+        self.x_threshold = XTHRESHOLD // 4
+        self.y_threshold = YTHRESHOLD // 4
 
         self.drawer = OpencvDrawFuncs(w=self.x_threshold, h=self.y_threshold, ppm=1.0)
         self.b2 = b2World(gravity=(0, 0), doSleep=True)
@@ -492,7 +490,7 @@ class SelfxBillardEye(selfx.SelfxEye):
             self.b2.DestroyBody(b)
 
         self.ownbody = self.b2.CreateStaticBody(
-            position=(self.x_threshold / 2, self.y_threshold / 4 * 3),
+            position=(self.x_threshold / 2, self.y_threshold / 2),
             shapes=circleShape(radius=5.0),
             linearDamping=0.0,
             bullet=True,
@@ -513,12 +511,13 @@ class SelfxBillardEye(selfx.SelfxEye):
             x, y = b.position
             dx, dy = x - x0, y - y0
             alngr = rx * dx + ry * dy
-            alngp = np.abs(px * dx + py * dy)
+            alngp = px * dx + py * dy
 
-            if alngp < self.x_threshold / 2 and - self.y_threshold / 4 < alngr < self.y_threshold / 4 * 3:
+            if - self.x_threshold / 2 < alngr < self.x_threshold / 2 and - self.y_threshold / 2 < alngp < self.y_threshold / 2:
+                bx, by = self.ownbody.position
                 if b.userData['type'] == 'candy':
                     self.b2.CreateStaticBody(
-                        position=(alngr, alngp),
+                        position=(bx - alngr, by - alngp),
                         shapes=circleShape(radius=5.0),
                         linearDamping=0.0,
                         bullet=True,
@@ -528,7 +527,7 @@ class SelfxBillardEye(selfx.SelfxEye):
                     )
                 if b.userData['type'] == 'obstacle':
                     self.b2.CreateStaticBody(
-                        position=(alngr, alngp),
+                        position=(bx - alngr, by - alngp),
                         shapes=circleShape(radius=20.0),
                         linearDamping=0.0,
                         bullet=True,
@@ -539,6 +538,7 @@ class SelfxBillardEye(selfx.SelfxEye):
 
         self.drawer.install()
         self.drawer.draw_world(self.b2)
+
         return self.drawer.screen
 
 
