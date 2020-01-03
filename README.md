@@ -15,10 +15,15 @@ Both the action of idle and swimming will cost energy, the only way for monster 
 
 The longer the monster live, the higher the game score is.
 
-In the output video, the screen is divided into two parts. The upper part is the inner world,
-while the bottom part is the outer world.
+In the output video, the screen is divided into three parts:
+* the local view from the point of the monster
+* the global view of the inner world
+* the global view of the outer world
 
-<img src="https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png" alt="demo" width="460px" height="460px" style="margin: 100px">
+Only the first two views - the local view and the global view of the inner world - are accessible by the monster and
+uses them as inputs of neural network.
+
+<img src="https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png" alt="demo" width="460px" height="690px" style="margin: 100px">
 
 As the above picture shows, at the beginning of training, the monster will draw randomly on the inner world.
  
