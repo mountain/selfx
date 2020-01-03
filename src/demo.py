@@ -17,7 +17,7 @@ from gym_selfx.nn.dqn import SimpleDQN, DQN, get_screen
 logger.set_level(logger.INFO)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", type=int, default=16, help="number of demo examples")
+parser.add_argument("-n", type=int, default=10, help="number of demo examples")
 parser.add_argument("-g", type=str, default='0', help="index of gpu")
 parser.add_argument("-m", type=str, default='', help="model path")
 opt = parser.parse_args()
@@ -30,7 +30,7 @@ device = torch.device(int(opt.g) if torch.cuda.is_available() else "cpu")
 
 env = gym.make('selfx-billard-v0')
 outdir = 'demo/selfx-billard'
-env = wrappers.Monitor(env, directory=outdir, force=True, mode='evaluation')
+env = wrappers.Monitor(env, directory=outdir, force=True, mode='evaluation', video_callable=lambda episode_id: True)
 env.seed(0)
 env.reset()
 
