@@ -41,7 +41,7 @@ cuda = True if torch.cuda.is_available() else False
 if cuda:
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(int(opt.g) if torch.cuda.is_available() else "cpu")
 logger.set_level(logger.INFO)
 
 env = gym.make('selfx-billard-v0')
