@@ -46,7 +46,7 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
         self.total = 0.0
-        self.queue = deque(maxlen=5)
+        self.queue = deque(maxlen=10)
 
     def reward(self):
         energy = self.ctx['agent'].b2.userData['energy']
