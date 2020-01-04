@@ -93,12 +93,13 @@ class SelfxGame:
         import itertools, collections
 
         fields = [a.name() for a in self.affordables]
-
         self.actions_list = [collections.namedtuple('Action', fields)._make(actions)
                              for actions in itertools.product(*[a.available_actions() for a in self.affordables])]
 
+        holders = self.affordables + [self.ctx['agent'].eye]
+        fields = [a.name() for a in holders]
         self.states_list = [collections.namedtuple('State', fields)._make(states)
-                            for states in itertools.product(*[a.available_states() for a in self.affordables])]
+                            for states in itertools.product(*[h.available_states() for h in holders])]
 
     def action_space(self):
         return self.actions_list
@@ -116,8 +117,9 @@ class SelfxGame:
     def state(self):
         import collections
 
-        fields = [a.name() for a in self.affordables]
-        s = collections.namedtuple('State', fields)._make([a.state() for a in self.affordables])
+        holders = self.affordables + [self.ctx['agent'].eye]
+        fields = [a.name() for a in holders]
+        s = collections.namedtuple('State', fields)._make([a.state() for a in holders])
         return s
 
     def act(self, observation, reward, done):
@@ -143,12 +145,6 @@ class SelfxWorld(SelfxAffordable):
     def __init__(self, ctx, name):
         super(SelfxWorld, self).__init__(ctx, name)
         self.step_handlers = []
-
-    def availabe_actions(self):
-        return ()
-
-    def availabe_states(self):
-        return ()
 
     def reset(self):
         pass
@@ -193,10 +189,20 @@ class SelfxAgent(SelfxAffordable):
 class SelfxEye:
     def __init__(self, ctx):
         self.ctx = ctx
+        self._state = self.available_states().__next__()
+
+    def name(self):
+        return 'eye'
 
     def view(self, world, center, direction):
         w = world.render()
         return np.zeros(w.shape)
+
+    def available_states(self):
+        return '0', '1'
+
+    def state(self):
+        return self._state
 
 
 class SelfxScope:

@@ -3,6 +3,7 @@
 import random
 import numpy as np
 import torch as th
+import itertools
 
 import gym_selfx.selfx.selfx as selfx
 
@@ -560,6 +561,34 @@ class SelfxBillardEye(selfx.SelfxEye):
         self.drawer.draw_world(self.b2)
 
         return self.drawer.screen
+
+    def available_states(self):
+        return itertools.product(
+            '01', '01', '01'
+        )
+
+    def state(self):
+        outer = self.ctx['outer']
+        agent = self.ctx['agent']
+        view = self.view(outer, agent.center(), agent.direction())
+
+        w, h, _ = view.shape
+        fl = view[:w // 2, :h // 2, :]
+        fr = view[w // 2:, :h // 2, :]
+        b = view[:, h // 2:, :]
+        fl = fl * (fl < 255)
+        fr = fr * (fr < 255)
+        b = b * (b < 255)
+
+        fl = np.max(fl) > 128
+        fr = np.max(fr) > 128
+        b = np.max(b) > 128
+
+        bits = '%d%d%d' % (fl, fr, b)
+        if '1' in bits:
+            print(bits)
+
+        return bits
 
 
 class SelfxBillardScope(selfx.SelfxScope):
