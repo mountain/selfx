@@ -70,8 +70,8 @@ def nature_selection():
     model_path = Path(outdir)
     mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
     policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
-    optimizer.load_state_dict(torch.load(mdlfile.replace('.mdl', '.opt'), map_location=device))
-    memory = torch.load(mdlfile.replace('.mdl', '.mem'))['memory']
+    optimizer.load_state_dict(torch.load(str(mdlfile).replace('.mdl', '.opt'), map_location=device))
+    memory = torch.load(str(mdlfile).replace('.mdl', '.mem'))['memory']
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
