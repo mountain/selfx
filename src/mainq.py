@@ -157,8 +157,11 @@ if __name__ == '__main__':
         if i_episode % ROUND_UPDATE == 0:
             if i_episode != 0:
                 game.round_end()
+
             game.round_begin()
-            nature_selection()
+
+            if i_episode != 0:
+                nature_selection()
 
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
