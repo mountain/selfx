@@ -155,9 +155,6 @@ if __name__ == '__main__':
         done = False
 
         if i_episode % ROUND_UPDATE == 0:
-            if i_episode != 0:
-                game.round_end()
-
             game.round_begin()
 
             if i_episode != 0:
@@ -207,5 +204,9 @@ if __name__ == '__main__':
             if len(glb) > 20:
                 for p in sorted(glb)[:-18]:
                     os.unlink(p)
+
+        if i_episode % ROUND_UPDATE == 0:
+            if i_episode != 0:
+                game.round_end()
 
     env.close()
