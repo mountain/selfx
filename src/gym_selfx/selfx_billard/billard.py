@@ -65,7 +65,7 @@ class SelfxBillardGame(selfx.SelfxGame):
         self.total = 0.0
 
     def exit_condition(self):
-        return self.ctx['agent'].b2.userData['energy'] <= 0
+        return self.ctx['agent'].b2.userData['energy'] <= 500
 
     def force_condition(self):
         return random.random() < 1 / TARGET_FPS / 7
@@ -441,6 +441,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
                 'color': (255, 255, 0)
             }
         )
+        self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * self.b2.mass
         self.b2.CreateCircleFixture(radius=5.0, density=1, friction=0.0)
 
     def subaffordables(self):
@@ -478,6 +479,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
         self.b2.userData['ax'] = ax
         self.b2.userData['ay'] = ay
         self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
+        self.b2.mass = self.b2.mass - energy_loss / 10
 
         mouth_open = self.ctx['game'].state().mouth == 'opened'
         if mouth_open:
@@ -489,10 +491,20 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             other = contact.other
             if other.userData['type'] == 'obstacle':
                 self.b2.userData['energy'] = self.b2.userData['energy'] - 10
+                self.b2.mass = self.b2.mass - 1
             elif other.userData['type'] == 'candy':
                 if mouth_open:
-                    mass = other.mass
-                    self.b2.userData['energy'] = self.b2.userData['energy'] + mass
+                    mass0 = self.b2.mass
+                    mass1 = other.mass
+                    self.b2.userData['energy'] = self.b2.userData['energy'] + 10 * mass1
+                    self.b2.mass = mass0 + mass1
+
+                    vx, vy = self.b2.linearVelocity
+                    ux, uy = other.linearVelocity
+                    wx = (vx * mass0 + ux * mass1) / self.b2.mass
+                    wy = (vy * mass0 + uy * mass1) / self.b2.mass
+                    self.b2.linearVelocity = wx, wy
+
                     self.ctx['outer'].b2.DestroyBody(other)
 
 
