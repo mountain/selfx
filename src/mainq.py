@@ -33,7 +33,7 @@ EPS_DECAY = 200
 TARGET_UPDATE = 10
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", type=int, default=1000, help="number of epochs of training")
+parser.add_argument("-n", type=int, default=5000, help="number of epochs of training")
 parser.add_argument("-g", type=str, default='0', help="index of gpu")
 opt = parser.parse_args()
 
@@ -168,7 +168,7 @@ if __name__ == '__main__':
         if i_episode % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
-            torch.save(policy_net.state_dict(), model_path / f'duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
+            torch.save(policy_net.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:
                 for p in sorted(glb)[:-15]:

@@ -43,9 +43,12 @@ class SelfxBillardToolkit(selfx.SelfxToolkit):
 class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
+        self.total = 0.0
 
     def reward(self):
-        return self.ctx['agent'].b2.userData['energy']
+        energy = self.ctx['agent'].b2.userData['energy']
+        self.total = self.total + energy
+        return energy
 
     def exit_condition(self):
         return self.ctx['agent'].b2.userData['energy'] <= 0
@@ -415,7 +418,7 @@ class SelfxBillardAgent(selfx.SelfxAgent):
             userData= {
                 'world': self.ctx['outer'].b2,
                 'type': 'monster',
-                'energy': 1000000,
+                'energy': 1000,
                 'ax': 0,
                 'ay': 0,
                 'color': (255, 255, 0)
@@ -471,7 +474,8 @@ class SelfxBillardAgent(selfx.SelfxAgent):
                 self.b2.userData['energy'] = self.b2.userData['energy'] - 10
             elif other.userData['type'] == 'candy':
                 if mouth_open:
-                    self.b2.userData['energy'] = self.b2.userData['energy'] + other.mass
+                    mass = other.mass
+                    self.b2.userData['energy'] = self.b2.userData['energy'] + mass
                     self.ctx['outer'].b2.DestroyBody(other)
 
 
