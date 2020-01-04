@@ -28,8 +28,8 @@ from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_scree
 BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
-EPS_END = 0.01
-EPS_DECAY = 200
+EPS_END = 0.05
+EPS_DECAY = 1000
 TARGET_UPDATE = 10
 
 parser = argparse.ArgumentParser()
@@ -70,11 +70,10 @@ def nature_selection():
     model_path = Path(outdir)
     mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
     policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
+    optimizer.load_state_dict(torch.load(mdlfile.replace('.mdl', '.opt'), map_location=device))
+    memory = torch.load(mdlfile.replace('.mdl', '.mem'))['memory']
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
-    steps_done = 0
-    memory = ReplayMemory(10000)
-    optimizer = optim.RMSprop(policy_net.parameters())
 
 
 def select_action(observation, reward, done):
@@ -185,6 +184,8 @@ if __name__ == '__main__':
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
             torch.save(policy_net.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
+            torch.save(optimizer.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
+            torch.save({"memory": memory}, model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:
                 for p in sorted(glb)[:-18]:
