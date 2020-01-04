@@ -31,6 +31,7 @@ EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 1000
 TARGET_UPDATE = 5
+ROUND_UPDATE = 50
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=5000, help="number of epochs of training")
@@ -66,7 +67,7 @@ optimizer = optim.RMSprop(policy_net.parameters())
 
 def nature_selection():
     global policy_net, target_net
-    global steps_done, memory, optimizer
+    global memory, optimizer
     model_path = Path(outdir)
     mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
     policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
@@ -153,7 +154,10 @@ if __name__ == '__main__':
         reward = 0
         done = False
 
-        if (i_episode + 1) % 50 == 0:
+        if i_episode % ROUND_UPDATE == 0:
+            if i_episode != 0:
+                game.round_end()
+            game.round_begin()
             nature_selection()
 
         last_screen = get_screen(env, device)
@@ -183,9 +187,10 @@ if __name__ == '__main__':
         if i_episode % TARGET_UPDATE == 0:
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
-            torch.save(policy_net.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
-            torch.save(optimizer.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
-            torch.save({"memory": memory}, model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
+            perf = env.game.performance()
+            torch.save(policy_net.state_dict(), model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
+            torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
+            torch.save({"memory": memory}, model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
 
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:

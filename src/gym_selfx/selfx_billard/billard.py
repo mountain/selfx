@@ -8,6 +8,7 @@ import gym_selfx.selfx.selfx as selfx
 
 from gym_selfx.render.draw import OpencvDrawFuncs
 from Box2D.Box2D import (b2CircleShape as circleShape, b2World)
+from collections import deque
 
 
 TARGET_FPS = 60
@@ -44,6 +45,7 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
         self.total = 0.0
+        self.queue = deque(maxlen=5)
 
     def reward(self):
         energy = self.ctx['agent'].b2.userData['energy']
@@ -51,6 +53,14 @@ class SelfxBillardGame(selfx.SelfxGame):
         return energy
 
     def reset(self):
+        self.queue.append(self.total)
+        self.total = 0.0
+
+    def round_begin(self):
+        pass
+
+    def round_end(self):
+        self.queue.clear()
         self.total = 0.0
 
     def exit_condition(self):
@@ -58,6 +68,9 @@ class SelfxBillardGame(selfx.SelfxGame):
 
     def force_condition(self):
         return random.random() < 1 / TARGET_FPS / 7
+
+    def performance(self):
+        return np.array(self.queue).mean()
 
 
 class SelfxBillardWorld(selfx.SelfxWorld):
