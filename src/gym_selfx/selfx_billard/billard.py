@@ -585,9 +585,6 @@ class SelfxBillardEye(selfx.SelfxEye):
         b = np.max(b) > 128
 
         bits = '%d%d%d' % (fl, fr, b)
-        if '1' in bits:
-            print(bits)
-
         return bits
 
 
