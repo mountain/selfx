@@ -28,7 +28,7 @@ from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_scree
 BATCH_SIZE = 128
 GAMMA = 0.999
 EPS_START = 0.9
-EPS_END = 0.05
+EPS_END = 0.01
 EPS_DECAY = 200
 TARGET_UPDATE = 10
 
@@ -187,7 +187,7 @@ if __name__ == '__main__':
             torch.save(policy_net.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:
-                for p in sorted(glb)[:-15]:
+                for p in sorted(glb)[:-18]:
                     os.unlink(p)
 
     env.close()
