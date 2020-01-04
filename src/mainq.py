@@ -186,7 +186,16 @@ if __name__ == '__main__':
             torch.save(policy_net.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
             torch.save(optimizer.state_dict(), model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
             torch.save({"memory": memory}, model_path / f'total_{int(env.game.total):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
+
             glb = list(model_path.glob('*.mdl'))
+            if len(glb) > 20:
+                for p in sorted(glb)[:-18]:
+                    os.unlink(p)
+            glb = list(model_path.glob('*.opt'))
+            if len(glb) > 20:
+                for p in sorted(glb)[:-18]:
+                    os.unlink(p)
+            glb = list(model_path.glob('*.mem'))
             if len(glb) > 20:
                 for p in sorted(glb)[:-18]:
                     os.unlink(p)
