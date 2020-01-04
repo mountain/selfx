@@ -64,6 +64,19 @@ memory = ReplayMemory(10000)
 optimizer = optim.RMSprop(policy_net.parameters())
 
 
+def nature_selection():
+    global policy_net, target_net
+    global steps_done, memory, optimizer
+    model_path = Path(outdir)
+    mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
+    policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
+    target_net.load_state_dict(policy_net.state_dict())
+    target_net.eval()
+    steps_done = 0
+    memory = ReplayMemory(10000)
+    optimizer = optim.RMSprop(policy_net.parameters())
+
+
 def select_action(observation, reward, done):
     global steps_done
     sample = random.random()
@@ -140,6 +153,9 @@ if __name__ == '__main__':
         env.reset()
         reward = 0
         done = False
+
+        if (i_episode + 1) % 50 == 0:
+            nature_selection()
 
         last_screen = get_screen(env, device)
         current_screen = get_screen(env, device)
