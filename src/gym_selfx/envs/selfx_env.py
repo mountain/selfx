@@ -72,6 +72,7 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.inner.reset()
         self.outer.reset()
         self.agent.reset()
+        self.game.reset()
         return self.state()
 
     def render(self, mode='rgb_array', close=False):

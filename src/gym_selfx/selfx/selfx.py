@@ -129,6 +129,9 @@ class SelfxGame:
     def reward(self):
         return 0.0
 
+    def reset(self):
+        pass
+
     def exit_condition(self):
         return False
 

@@ -50,6 +50,9 @@ class SelfxBillardGame(selfx.SelfxGame):
         self.total = self.total + energy
         return energy
 
+    def reset(self):
+        self.total = 0.0
+
     def exit_condition(self):
         return self.ctx['agent'].b2.userData['energy'] <= 0
 
