@@ -18,7 +18,7 @@ TIME_STEP = 1.0 / TARGET_FPS
 XTHRESHOLD = 1024
 YTHRESHOLD = 512
 
-ENERGY_PER_MASS = 500
+ENERGY_PER_MASS = 100
 
 
 class SelfxBillardToolkit(selfx.SelfxToolkit):

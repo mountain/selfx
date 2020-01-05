@@ -30,8 +30,8 @@ GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 1000
-TARGET_UPDATE = 5
-ROUND_UPDATE = 50
+TARGET_UPDATE = 3
+ROUND_UPDATE = 17
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=5000, help="number of epochs of training")
@@ -188,9 +188,9 @@ if __name__ == '__main__':
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
             perf = env.game.performance()
-            torch.save(policy_net.state_dict(), model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
-            torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
-            torch.save({"memory": memory}, model_path / f'perf_{int(perf):09d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
+            torch.save(policy_net.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
+            torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
+            torch.save({"memory": memory}, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
 
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:
