@@ -39,7 +39,7 @@ _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
 if opt.m == '':
-    pattern = '*.mdl'
+    pattern = '*.chk'
 else:
     pattern = opt.m
 
