@@ -48,7 +48,7 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
         self.total = 0.0
-        self.queue = deque(maxlen=5)
+        self.queue = deque(maxlen=7)
 
     def reward(self):
         energy = self.ctx['agent'].b2.userData['energy']
@@ -67,7 +67,7 @@ class SelfxBillardGame(selfx.SelfxGame):
         self.total = 0.0
 
     def exit_condition(self):
-        return self.ctx['agent'].b2.userData['energy'] <= 500
+        return self.ctx['agent'].b2.userData['energy'] <= 200
 
     def force_condition(self):
         return random.random() < 1 / TARGET_FPS / 7

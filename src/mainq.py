@@ -30,8 +30,8 @@ GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 1000
-TARGET_UPDATE = 3
-ROUND_UPDATE = 17
+TARGET_UPDATE = 7
+ROUND_UPDATE = 21
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=5000, help="number of epochs of training")
