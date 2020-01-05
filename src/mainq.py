@@ -34,7 +34,7 @@ TARGET_UPDATE = 7
 ROUND_UPDATE = 21
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", type=int, default=5000, help="number of epochs of training")
+parser.add_argument("-n", type=int, default=256000, help="number of epochs of training")
 parser.add_argument("-g", type=str, default='0', help="index of gpu")
 opt = parser.parse_args()
 
