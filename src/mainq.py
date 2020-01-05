@@ -74,6 +74,7 @@ def nature_selection():
     #optimizer.load_state_dict(torch.load(str(mdlfile).replace('.mdl', '.opt'), map_location=device))
     #memory = torch.load(str(mdlfile).replace('.mdl', '.mem'))['memory']
     memory = ReplayMemory(10000)
+    optimizer = optim.RMSprop(policy_net.parameters())
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
