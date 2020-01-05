@@ -45,7 +45,7 @@ else:
 
 model_path = Path('results/selfx-billard')
 policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
-policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device))
+policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device)['policy'])
 
 
 def select_action(observation, reward, done):
