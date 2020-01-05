@@ -69,10 +69,11 @@ def nature_selection():
     global policy_net, target_net
     global memory, optimizer
     model_path = Path(outdir)
-    mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
-    policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
-    optimizer.load_state_dict(torch.load(str(mdlfile).replace('.mdl', '.opt'), map_location=device))
-    memory = torch.load(str(mdlfile).replace('.mdl', '.mem'))['memory']
+    chkfile = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
+    checkpoint = torch.load(chkfile, map_location=device)
+    policy_net.load_state_dict(checkpoint['policy'])
+    optimizer.load_state_dict(checkpoint['optimizer'])
+    memory = checkpoint['memory']
     #memory = ReplayMemory(10000)
     #optimizer = optim.RMSprop(policy_net.parameters())
     target_net.load_state_dict(policy_net.state_dict())
@@ -190,21 +191,16 @@ if __name__ == '__main__':
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
             perf = env.game.performance()
-            torch.save(policy_net.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
-            torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
-            torch.save({"memory": memory}, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
+            check = {
+                'policy': policy_net.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'memory': memory,
+            }
+            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.chk')
 
-            glb = list(model_path.glob('*.mdl'))
-            if len(glb) > 20:
-                for p in sorted(glb)[:-18]:
-                    os.unlink(p)
-            glb = list(model_path.glob('*.opt'))
-            if len(glb) > 20:
-                for p in sorted(glb)[:-18]:
-                    os.unlink(p)
-            glb = list(model_path.glob('*.mem'))
-            if len(glb) > 20:
-                for p in sorted(glb)[:-18]:
+            glb = list(model_path.glob('*.chk'))
+            if len(glb) > 41:
+                for p in sorted(glb)[:-40]:
                     os.unlink(p)
 
         if i_episode % ROUND_UPDATE == 0:
