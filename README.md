@@ -25,7 +25,7 @@ uses them as inputs of neural network.
 
 <img src="https://raw.githubusercontent.com/mountain/selfx/master/docs/demo.png" alt="demo" width="460px" height="690px" style="margin: 100px">
 
-After training for about 100 episode, the monster was learned to avoid obstacles, but it could only draw randomly on the inner world.
+After training for about 100 episode, the monster was learned to avoid obstacles, but it could merely draw randomly on the inner world.
 
 [<img src="https://img.youtube.com/vi/Sh2LnCXzE8A/maxresdefault.jpg" width="50%">](https://youtu.be/Sh2LnCXzE8A)
 
