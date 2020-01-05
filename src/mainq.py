@@ -62,7 +62,7 @@ target_net.eval()
 
 steps_done = 0
 memory = ReplayMemory(10000)
-optimizer = optim.RMSprop(policy_net.parameters())
+optimizer = optim.Adam(policy_net.parameters())
 
 
 def nature_selection():
@@ -71,8 +71,9 @@ def nature_selection():
     model_path = Path(outdir)
     mdlfile = random.sample(sorted(list(model_path.glob("*.mdl"))), 1)[0]
     policy_net.load_state_dict(torch.load(mdlfile, map_location=device))
-    optimizer.load_state_dict(torch.load(str(mdlfile).replace('.mdl', '.opt'), map_location=device))
-    memory = torch.load(str(mdlfile).replace('.mdl', '.mem'))['memory']
+    #optimizer.load_state_dict(torch.load(str(mdlfile).replace('.mdl', '.opt'), map_location=device))
+    #memory = torch.load(str(mdlfile).replace('.mdl', '.mem'))['memory']
+    memory = ReplayMemory(10000)
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
@@ -189,21 +190,21 @@ if __name__ == '__main__':
             model_path = Path(outdir)
             perf = env.game.performance()
             torch.save(policy_net.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mdl')
-            torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
-            torch.save({"memory": memory}, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
+            #torch.save(optimizer.state_dict(), model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.opt')
+            #torch.save({"memory": memory}, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.mem')
 
             glb = list(model_path.glob('*.mdl'))
             if len(glb) > 20:
                 for p in sorted(glb)[:-18]:
                     os.unlink(p)
-            glb = list(model_path.glob('*.opt'))
-            if len(glb) > 20:
-                for p in sorted(glb)[:-18]:
-                    os.unlink(p)
-            glb = list(model_path.glob('*.mem'))
-            if len(glb) > 20:
-                for p in sorted(glb)[:-18]:
-                    os.unlink(p)
+            #glb = list(model_path.glob('*.opt'))
+            #if len(glb) > 20:
+            #    for p in sorted(glb)[:-18]:
+            #        os.unlink(p)
+            #glb = list(model_path.glob('*.mem'))
+            #if len(glb) > 20:
+            #    for p in sorted(glb)[:-18]:
+            #        os.unlink(p)
 
         if i_episode % ROUND_UPDATE == 0:
             if i_episode != 0:
