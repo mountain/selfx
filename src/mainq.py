@@ -27,7 +27,7 @@ from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_scree
 
 BATCH_SIZE = 128
 GAMMA = 0.999
-EPS_START = 0.9
+EPS_START = 0.95
 EPS_END = 0.05
 EPS_DECAY = 1000
 TARGET_UPDATE = 7
