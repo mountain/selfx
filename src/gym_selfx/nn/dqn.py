@@ -80,8 +80,26 @@ class SimpleDQN(nn.Module):
         linear_input_size = convw * convh * 32
         self.head = nn.Linear(linear_input_size, outputs)
 
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
+        self.co1 = torch.scalar_tensor(1.0, dtype=torch.float32)
+        self.co2 = torch.scalar_tensor(1.0, dtype=torch.float32)
+        self.co3 = torch.scalar_tensor(1.0, dtype=torch.float32)
+
+    def crossover(self, another):
+        coeff = torch.sigmoid(self.co1 + another.co1)
+        self.conv1.weight = self.conv1.weight * coeff + another.conv1.weight * (1 - coeff)
+        self.conv1.bias =  self.conv1.bias * coeff + another.conv1.bias * (1 - coeff)
+        coeff = torch.sigmoid(self.co2 + another.co2)
+        self.conv2.weight = self.conv2.weight * coeff + another.conv2.weight * (1 - coeff)
+        self.conv2.bias = self.conv2.bias * coeff + another.conv2.bias * (1 - coeff)
+        coeff = torch.sigmoid(self.co3 + another.co3)
+        self.conv3.weight = self.conv3.weight * coeff + another.conv3.weight * (1 - coeff)
+        self.conv3.bias = self.conv3.bias * coeff + another.conv3.bias * (1 - coeff)
+
+        if random.random() > 0.90:
+            self.co1 = torch.tanh(self.co1 - another.co1) * random.random()
+            self.co2 = torch.tanh(self.co2 - another.co2) * random.random()
+            self.co3 = torch.tanh(self.co3 - another.co3) * random.random()
+
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))

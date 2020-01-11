@@ -57,6 +57,7 @@ n_actions = len(env.action_space)
 
 policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
 target_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
+loader_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
@@ -66,16 +67,22 @@ optimizer = optim.RMSprop(policy_net.parameters())
 
 
 def nature_selection():
-    global policy_net, target_net
-    global memory, optimizer
+    global memory
     model_path = Path(outdir)
-    chkfile = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
-    checkpoint = torch.load(chkfile, map_location=device)
+
+    idx = int(random.random() * 40)
+    file_base = sorted(list(model_path.glob("*.chk")))[idx]
+    checkpoint = torch.load(file_base, map_location=device)
     policy_net.load_state_dict(checkpoint['policy'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     memory = checkpoint['memory']
-    #memory = ReplayMemory(10000)
-    #optimizer = optim.RMSprop(policy_net.parameters())
+
+    if idx < 15:
+        file_another = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
+        checkpoint = torch.load(file_another, map_location=device)
+        loader_net.load_state_dict(checkpoint['policy'])
+        policy_net.crossover(loader_net)
+
     target_net.load_state_dict(policy_net.state_dict())
     target_net.eval()
 
@@ -196,7 +203,10 @@ if __name__ == '__main__':
                 'optimizer': optimizer.state_dict(),
                 'memory': memory,
             }
-            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.chk')
+            co1 = policy_net.co1.item().numpy()
+            co2 = policy_net.co2.item().numpy()
+            co3 = policy_net.co3.item().numpy()
+            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.co_{co1:0.4f}-{co2:0.4f}-{co3:0.4f}.chk')
 
             glb = list(model_path.glob('*.chk'))
             if len(glb) > 41:
