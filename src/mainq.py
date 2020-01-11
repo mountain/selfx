@@ -209,8 +209,8 @@ if __name__ == '__main__':
             torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.co_{co1:0.4f}-{co2:0.4f}-{co3:0.4f}.chk')
 
             glb = list(model_path.glob('*.chk'))
-            if len(glb) > 41:
-                for p in sorted(glb)[:-40]:
+            if len(glb) > 45:
+                for p in sorted(glb)[:-45]:
                     os.unlink(p)
 
         if i_episode % ROUND_UPDATE == 0:
