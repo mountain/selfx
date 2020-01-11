@@ -86,14 +86,14 @@ class SimpleDQN(nn.Module):
 
     def crossover(self, another):
         coeff = torch.sigmoid(self.co1 + another.co1)
-        self.conv1.weight = self.conv1.weight * coeff + another.conv1.weight * (1 - coeff)
-        self.conv1.bias =  self.conv1.bias * coeff + another.conv1.bias * (1 - coeff)
+        self.conv1.weight = torch.nn.Parameter(self.conv1.weight * coeff + another.conv1.weight * (1 - coeff))
+        self.conv1.bias = torch.nn.Parameter(self.conv1.bias * coeff + another.conv1.bias * (1 - coeff))
         coeff = torch.sigmoid(self.co2 + another.co2)
-        self.conv2.weight = self.conv2.weight * coeff + another.conv2.weight * (1 - coeff)
-        self.conv2.bias = self.conv2.bias * coeff + another.conv2.bias * (1 - coeff)
+        self.conv2.weight = torch.nn.Parameter(self.conv2.weight * coeff + another.conv2.weight * (1 - coeff))
+        self.conv2.bias = torch.nn.Parameter(self.conv2.bias * coeff + another.conv2.bias * (1 - coeff))
         coeff = torch.sigmoid(self.co3 + another.co3)
-        self.conv3.weight = self.conv3.weight * coeff + another.conv3.weight * (1 - coeff)
-        self.conv3.bias = self.conv3.bias * coeff + another.conv3.bias * (1 - coeff)
+        self.conv3.weight = torch.nn.Parameter(self.conv3.weight * coeff + another.conv3.weight * (1 - coeff))
+        self.conv3.bias = torch.nn.Parameter(self.conv3.bias * coeff + another.conv3.bias * (1 - coeff))
 
         if random.random() > 0.90:
             self.co1 = torch.tanh(self.co1 - another.co1) * random.random()
