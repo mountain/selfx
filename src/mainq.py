@@ -180,68 +180,75 @@ if __name__ == '__main__':
     #         env.render(mode='rgb_array')
 
     for i_episode in range(opt.n):
-        env.reset()
-        reward = 0
-        done = False
+        try:
+            env.reset()
+            reward = 0
+            done = False
 
-        if i_episode % ROUND_UPDATE == 0:
-            game.round_begin()
+            if i_episode % ROUND_UPDATE == 0:
+                game.round_begin()
 
-            if i_episode != 0:
-                nature_selection()
+                if i_episode != 0:
+                    nature_selection()
 
-        last_screen = get_screen(env, device)
-        current_screen = get_screen(env, device)
-        state = torch.cat((current_screen, last_screen), dim=1)
-
-        for t in count():
-            action = game.act(state, reward, done)
-            _, reward, done, _ = env.step(action)
-            reward = torch.tensor([reward], device=device)
-
-            last_screen = current_screen
+            last_screen = get_screen(env, device)
             current_screen = get_screen(env, device)
-            if not done:
-                next_state = torch.cat((current_screen, last_screen), dim=1)
-            else:
-                next_state = None
+            state = torch.cat((current_screen, last_screen), dim=1)
 
-            memory.push(state, action, next_state, reward)
-            state = next_state
+            for t in count():
+                action = game.act(state, reward, done)
+                _, reward, done, _ = env.step(action)
+                reward = torch.tensor([reward], device=device)
 
-            optimize_model()
-            if done:
-                print(f'duration[{i_episode:04d}]:{t + 1:04d}')
-                break
+                last_screen = current_screen
+                current_screen = get_screen(env, device)
+                if not done:
+                    next_state = torch.cat((current_screen, last_screen), dim=1)
+                else:
+                    next_state = None
 
-        if i_episode % TARGET_UPDATE == 0:
-            target_net.load_state_dict(policy_net.state_dict())
-            model_path = Path(outdir)
-            perf = env.game.performance()
-            dura = env.game.avg_duration()
-            check = {
-                'policy': policy_net.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'memory': memory,
-            }
-            co1 = policy_net.co1.item()
-            co2 = policy_net.co2.item()
-            co3 = policy_net.co3.item()
+                memory.push(state, action, next_state, reward)
+                state = next_state
 
-            filepath = model_path / f'perf_{int(perf):010d}.duration_{int(dura):04d}.episode_{i_episode:04d}.co_{co1:0.4f}_{co2:0.4f}_{co3:0.4f}.chk'
-            torch.save(check, filepath)
-            rank = sorted(list(model_path.glob("*.chk"))).index(filepath) / 45
-            r.lpush('selfx:ranks', '%0.8f' % rank)
-            r.ltrim('selfx:ranks', 0, 45)
-            print('rank:', rank)
+                optimize_model()
+                if done:
+                    print(f'duration[{i_episode:04d}]:{t + 1:04d}')
+                    break
 
-            glb = list(model_path.glob('*.chk'))
-            if len(glb) > 45:
-                for p in sorted(glb)[:-45]:
-                    os.unlink(p)
+            if i_episode % TARGET_UPDATE == 0:
+                target_net.load_state_dict(policy_net.state_dict())
+                model_path = Path(outdir)
+                perf = env.game.performance()
+                dura = env.game.avg_duration()
+                check = {
+                    'policy': policy_net.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'memory': memory,
+                }
+                co1 = policy_net.co1.item()
+                co2 = policy_net.co2.item()
+                co3 = policy_net.co3.item()
 
-        if i_episode % ROUND_UPDATE == 0:
-            if i_episode != 0:
-                game.round_end()
+                filepath = model_path / f'perf_{int(perf):010d}.duration_{int(dura):04d}.episode_{i_episode:04d}.co_{co1:0.4f}_{co2:0.4f}_{co3:0.4f}.chk'
+                torch.save(check, filepath)
+                try:
+                    rank = sorted(list(model_path.glob("*.chk"))).index(filepath) / 45
+                except ValueError:
+                    rank = 0.0
+                r.lpush('selfx:ranks', '%0.8f' % rank)
+                r.ltrim('selfx:ranks', 0, 45)
+                print('rank:', rank)
+
+                glb = list(model_path.glob('*.chk'))
+                if len(glb) > 45:
+                    for p in sorted(glb)[:-45]:
+                        os.unlink(p)
+
+            if i_episode % ROUND_UPDATE == 0:
+                if i_episode != 0:
+                    game.round_end()
+
+        except Exception as e:
+            print('error:', e)
 
     env.close()
