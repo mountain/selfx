@@ -80,9 +80,9 @@ class SimpleDQN(nn.Module):
         linear_input_size = convw * convh * 32
         self.head = nn.Linear(linear_input_size, outputs)
 
-        self.co1 = torch.scalar_tensor(1.0, dtype=torch.float32)
-        self.co2 = torch.scalar_tensor(1.0, dtype=torch.float32)
-        self.co3 = torch.scalar_tensor(1.0, dtype=torch.float32)
+        self.co1 = torch.scalar_tensor(2 * random.random() - 1, dtype=torch.float32)
+        self.co2 = torch.scalar_tensor(2 * random.random() - 1, dtype=torch.float32)
+        self.co3 = torch.scalar_tensor(2 * random.random() - 1, dtype=torch.float32)
 
     def crossover(self, another):
         coeff = torch.sigmoid(self.co1 + another.co1)

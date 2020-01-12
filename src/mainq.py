@@ -208,7 +208,7 @@ if __name__ == '__main__':
             co1 = policy_net.co1.item()
             co2 = policy_net.co2.item()
             co3 = policy_net.co3.item()
-            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{dura:04d}.episode_{i_episode:04d}.co_{co1:0.4f}-{co2:0.4f}-{co3:0.4f}.chk')
+            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{dura:04d}.episode_{i_episode:04d}.co_{co1:0.4f}_{co2:0.4f}_{co3:0.4f}.chk')
 
             glb = list(model_path.glob('*.chk'))
             if len(glb) > 45:
