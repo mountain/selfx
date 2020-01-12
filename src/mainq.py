@@ -199,7 +199,7 @@ if __name__ == '__main__':
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
             perf = env.game.performance()
-            dura = env.game.duration()
+            dura = env.game.avg_duration()
             check = {
                 'policy': policy_net.state_dict(),
                 'optimizer': optimizer.state_dict(),

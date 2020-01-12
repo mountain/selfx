@@ -82,7 +82,7 @@ class SelfxBillardGame(selfx.SelfxGame):
     def performance(self):
         return np.array(self.pqueue).mean()
 
-    def duration(self):
+    def avg_duration(self):
         return np.array(self.dqueue).mean()
 
 
