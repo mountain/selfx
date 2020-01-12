@@ -30,8 +30,8 @@ import redis
 
 r = redis.Redis(host='localhost', port=6379, db=7, decode_responses=True)
 
-if r.exists('selfx:prob:crossover') > 0:
-    r.put('selfx:prob:crossover', '%0.8f' % 0.33333333)
+if r.exists('selfx:prob:crossover') <= 0:
+    r.set('selfx:prob:crossover', '%0.8f' % 0.33333333)
 
 
 BATCH_SIZE = 128
