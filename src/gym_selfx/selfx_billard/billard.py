@@ -48,23 +48,30 @@ class SelfxBillardGame(selfx.SelfxGame):
     def __init__(self, ctx):
         super(SelfxBillardGame, self).__init__(ctx)
         self.total = 0.0
-        self.queue = deque(maxlen=7)
+        self.duration = 0.0
+        self.dqueue = deque(maxlen=7)
+        self.pqueue = deque(maxlen=7)
 
     def reward(self):
         energy = self.ctx['agent'].b2.userData['energy']
         self.total = self.total + energy
+        self.duration = self.duration + 1
         return energy
 
     def reset(self):
-        self.queue.append(self.total)
+        self.pqueue.append(self.total)
+        self.dqueue.append(self.duration)
         self.total = 0.0
+        self.duration = 0.0
 
     def round_begin(self):
         pass
 
     def round_end(self):
-        self.queue.clear()
+        self.pqueue.clear()
+        self.dqueue.clear()
         self.total = 0.0
+        self.duration = 0.0
 
     def exit_condition(self):
         return self.ctx['agent'].b2.userData['energy'] <= 200
@@ -73,7 +80,10 @@ class SelfxBillardGame(selfx.SelfxGame):
         return random.random() < 1 / TARGET_FPS / 7
 
     def performance(self):
-        return np.array(self.queue).mean()
+        return np.array(self.pqueue).mean()
+
+    def duration(self):
+        return np.array(self.dqueue).mean()
 
 
 class SelfxBillardWorld(selfx.SelfxWorld):

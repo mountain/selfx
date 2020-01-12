@@ -199,6 +199,7 @@ if __name__ == '__main__':
             target_net.load_state_dict(policy_net.state_dict())
             model_path = Path(outdir)
             perf = env.game.performance()
+            dura = env.game.duration()
             check = {
                 'policy': policy_net.state_dict(),
                 'optimizer': optimizer.state_dict(),
@@ -207,7 +208,7 @@ if __name__ == '__main__':
             co1 = policy_net.co1.item()
             co2 = policy_net.co2.item()
             co3 = policy_net.co3.item()
-            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{t + 1:04d}.episode_{i_episode:04d}.co_{co1:0.4f}-{co2:0.4f}-{co3:0.4f}.chk')
+            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{dura:04d}.episode_{i_episode:04d}.co_{co1:0.4f}-{co2:0.4f}-{co3:0.4f}.chk')
 
             glb = list(model_path.glob('*.chk'))
             if len(glb) > 45:
