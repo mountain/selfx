@@ -70,8 +70,9 @@ def nature_selection():
     global memory
     model_path = Path(outdir)
 
-    idx = int(random.random() * 40)
-    file_base = sorted(list(model_path.glob("*.chk")))[idx]
+    population = sorted(list(model_path.glob("*.chk")))
+    idx = int(random.random() * (len(population) - 1))
+    file_base = population[idx]
     checkpoint = torch.load(file_base, map_location=device)
     policy_net.load_state_dict(checkpoint['policy'])
     optimizer.load_state_dict(checkpoint['optimizer'])
