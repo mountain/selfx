@@ -90,7 +90,7 @@ def nature_selection():
     prob = float(r.get('selfx:prob:crossover'))
     avgrank = np.array([float(rank) for rank in r.lrange('selfx:ranks', 0, 45)]).mean()
     if avgrank < 0.3:
-        prob = prob / 3 / avgrank
+        prob = np.tanh(prob / 3 / avgrank)
         r.set('selfx:prob:crossover', '%0.8f' % prob)
     else:
         prob = prob * 0.99
