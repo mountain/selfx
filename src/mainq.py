@@ -95,6 +95,7 @@ def nature_selection():
     else:
         prob = prob * 0.99
         r.set('selfx:prob:crossover', '%0.8f' % prob)
+    print('crossover prob:', prob)
 
     if idx < (len(population) - 1) * prob:
         file_another = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
@@ -232,6 +233,7 @@ if __name__ == '__main__':
             rank = sorted(list(model_path.glob("*.chk"))).index(filepath) / 45
             r.lpush('selfx:ranks', '%0.8f' % rank)
             r.ltrim('selfx:ranks', 0, 45)
+            print('rank:', rank)
 
             glb = list(model_path.glob('*.chk'))
             if len(glb) > 45:
