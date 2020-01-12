@@ -6,3 +6,5 @@ box2d-kengz
 
 torch
 torchvision
+
+redis

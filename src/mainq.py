@@ -14,6 +14,7 @@ import argparse
 import gym
 import math
 import random
+import numpy as np
 
 import torch
 import torch.optim as optim
@@ -23,6 +24,14 @@ from pathlib import Path
 from itertools import count
 from gym import wrappers, logger
 from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_screen
+
+
+import redis
+
+r = redis.Redis(host='localhost', port=6379, db=7, decode_responses=True)
+
+if r.exists('selfx:prob:crossover') > 0:
+    r.put('selfx:prob:crossover', '%0.8f' % 0.33333333)
 
 
 BATCH_SIZE = 128
@@ -78,7 +87,16 @@ def nature_selection():
     optimizer.load_state_dict(checkpoint['optimizer'])
     memory = checkpoint['memory']
 
-    if idx < (len(population) - 1) / 3:
+    prob = float(r.get('selfx:prob:crossover'))
+    avgrank = np.array([float(rank) for rank in r.lrange('selfx:ranks', 0, 45)]).mean()
+    if avgrank < 0.3:
+        prob = prob / 3 / avgrank
+        r.set('selfx:prob:crossover', '%0.8f' % prob)
+    else:
+        prob = prob * 0.99
+        r.set('selfx:prob:crossover', '%0.8f' % prob)
+
+    if idx < (len(population) - 1) * prob:
         file_another = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
         checkpoint = torch.load(file_another, map_location=device)
         loader_net.load_state_dict(checkpoint['policy'])
@@ -208,7 +226,12 @@ if __name__ == '__main__':
             co1 = policy_net.co1.item()
             co2 = policy_net.co2.item()
             co3 = policy_net.co3.item()
-            torch.save(check, model_path / f'perf_{int(perf):010d}.duration_{int(dura):04d}.episode_{i_episode:04d}.co_{co1:0.4f}_{co2:0.4f}_{co3:0.4f}.chk')
+
+            filepath = model_path / f'perf_{int(perf):010d}.duration_{int(dura):04d}.episode_{i_episode:04d}.co_{co1:0.4f}_{co2:0.4f}_{co3:0.4f}.chk'
+            torch.save(check, filepath)
+            rank = sorted(list(model_path.glob("*.chk"))).index(filepath) / 45
+            r.lpush('selfx:ranks', '%0.8f' % rank)
+            r.ltrim('selfx:ranks', 0, 45)
 
             glb = list(model_path.glob('*.chk'))
             if len(glb) > 45:
