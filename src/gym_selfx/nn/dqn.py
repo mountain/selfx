@@ -96,9 +96,9 @@ class SimpleDQN(nn.Module):
         self.conv3.bias = torch.nn.Parameter(self.conv3.bias * coeff + another.conv3.bias * (1 - coeff))
 
         if random.random() > 0.90:
-            self.co1 = torch.tanh(self.co1 - another.co1) * random.random()
-            self.co2 = torch.tanh(self.co2 - another.co2) * random.random()
-            self.co3 = torch.tanh(self.co3 - another.co3) * random.random()
+            self.co1 = torch.tanh(self.co1 + another.co1) * random.random()
+            self.co2 = torch.tanh(self.co2 + another.co2) * random.random()
+            self.co3 = torch.tanh(self.co3 + another.co3) * random.random()
 
     def forward(self, x):
         x = F.relu(self.bn1(self.conv1(x)))
