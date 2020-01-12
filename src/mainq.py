@@ -78,7 +78,7 @@ def nature_selection():
     optimizer.load_state_dict(checkpoint['optimizer'])
     memory = checkpoint['memory']
 
-    if idx < 15:
+    if idx < (len(population) - 1) / 3:
         file_another = random.sample(sorted(list(model_path.glob("*.chk"))), 1)[0]
         checkpoint = torch.load(file_another, map_location=device)
         loader_net.load_state_dict(checkpoint['policy'])
