@@ -48,7 +48,7 @@ env = None
 
 net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
 optimizer = optim.Adam(net.parameters())
-policy = ts.policy.DQNPolicy(net, optim, discount_factor=0.9, estimation_step=3, target_update_freq=320)
+policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 
 train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(8)])
 test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(100)])
