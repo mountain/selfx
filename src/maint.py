@@ -13,6 +13,7 @@ import torch.optim as optim
 
 from pathlib import Path
 from gym import wrappers, logger
+from gym_selfx.nn.dqn import get_screen
 from tianshou.utils.net.discrete import DQN
 
 parser = argparse.ArgumentParser()
