@@ -13,6 +13,7 @@ modified for special usage of selfx project
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class BasicResidualSEBlock(nn.Module):
 
     expansion = 1
@@ -57,6 +58,7 @@ class BasicResidualSEBlock(nn.Module):
         x = residual * excitation.expand_as(residual) + shortcut
 
         return F.relu(x)
+
 
 class BottleneckResidualSEBlock(nn.Module):
 
@@ -108,6 +110,7 @@ class BottleneckResidualSEBlock(nn.Module):
 
         return F.relu(x)
 
+
 class SEResNet(nn.Module):
 
     def __init__(self, block, block_num, class_num=100):
@@ -156,17 +159,22 @@ class SEResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
+
 def seresnet18():
     return SEResNet(BasicResidualSEBlock, [2, 2, 2, 2])
+
 
 def seresnet34():
     return SEResNet(BasicResidualSEBlock, [3, 4, 6, 3])
 
+
 def seresnet50():
     return SEResNet(BottleneckResidualSEBlock, [3, 4, 6, 3])
 
+
 def seresnet101():
     return SEResNet(BottleneckResidualSEBlock, [3, 4, 23, 3])
+
 
 def seresnet152():
     return SEResNet(BottleneckResidualSEBlock, [3, 8, 36, 3])

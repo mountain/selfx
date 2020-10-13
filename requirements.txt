@@ -7,4 +7,6 @@ box2d-kengz
 torch
 torchvision
 
+tianshou
+
 redis
