@@ -100,11 +100,11 @@ class SimpleDQN(nn.Module):
             self.co2 = torch.tanh(self.co2 + another.co2) * random.random()
             self.co3 = torch.tanh(self.co3 + another.co3) * random.random()
 
-    def forward(self, x):
+    def forward(self, x, state=None, info={}):
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
+        return self.head(x.view(x.size(0), -1)), state
 
 
 resize = T.Compose([

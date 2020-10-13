@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-This code is originally derived from
- Reinforcement Learning (DQN) Tutorial by `Adam Paszke <https://github.com/apaszke>`
-
-"""
-
 # bootstrap
 import gym_selfx.selfx
 
