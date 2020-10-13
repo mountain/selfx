@@ -13,7 +13,7 @@ import torch.optim as optim
 
 from pathlib import Path
 from gym import wrappers, logger
-from gym_selfx.nn.dqn import SimpleDQN, get_screen
+from tianshou.utils.net.discrete import DQN
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=256000, help="number of epochs of training")
@@ -40,7 +40,7 @@ n_actions = len(env.action_space)
 
 env = None
 
-net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
+net = DQN(3, screen_height, screen_width, n_actions, device=device).to(device)
 optimizer = optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 
