@@ -54,7 +54,12 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         self.state_space = self.game.state_space()
 
     def state(self):
-        return self.game.state()
+        img = self.render(mode='rgb_array', close=False)
+        h, w, c = img.shape
+        r = img[:, :, 0:1].reshape(1, h, w)
+        g = img[:, :, 1:2].reshape(1, h, w)
+        b = img[:, :, 2:3].reshape(1, h, w)
+        return np.concatenate((r, g, b), axis=0)
 
     def step(self, action):
         reward = self.game.reward()

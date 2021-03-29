@@ -7,14 +7,18 @@ import os
 import argparse
 import gym
 import tianshou as ts
+import numpy as np
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
+import torchvision.transforms as T
 
 from pathlib import Path
 from gym import wrappers, logger
-from gym_selfx.nn.dqn import get_screen
-from tianshou.utils.net.discrete import DQN
+from tianshou.utils.net.discrete import Actor
+from leibniz.nn.net import resnet
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", type=int, default=256000, help="number of epochs of training")
@@ -35,38 +39,68 @@ env = wrappers.Monitor(env, directory=outdir, force=True)
 env.seed(0)
 env.reset()
 
+
+resize = T.Compose([
+    T.ToPILImage(),
+    T.ToTensor()
+])
+
+
+def get_screen(env, device):
+    screen = env.render(mode='rgb_array').transpose((2, 0, 1))
+    _, screen_height, screen_width = screen.shape
+    screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
+    screen = torch.from_numpy(screen)
+    return resize(screen).unsqueeze(0).to(device)
+
+
 init_screen = get_screen(env, device)
 _, _, screen_height, screen_width = init_screen.shape
-n_actions = len(env.action_space)
+n_actions = [len(env.action_space)]
 
-env = None
 
-net = DQN(3, screen_height, screen_width, n_actions, device=device).to(device)
+class Net(nn.Module):
+    def __init__(self, state_shape, action_shape):
+        super().__init__()
+        h, w, a = state_shape[0], state_shape[1], action_shape[0]
+        self.resnet = resnet(3, a, layers=4, ratio=0, vblks=[1, 1, 1, 1], scales=[-1, -1, -1, -1], factors=[1, 1, 1, 1], spatial=(h, w))
+
+    def forward(self, obs, state=None, info={}):
+        if not isinstance(obs, torch.Tensor):
+            obs = torch.tensor(obs, dtype=torch.float)
+            if cuda:
+                obs = obs.cuda().to(device)
+
+        result = self.resnet(obs)
+        return result, state
+
+
+net = Net([screen_height, screen_width], n_actions)
+if cuda:
+    net = net.cuda().to(device)
+
 optimizer = optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 
-train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(8)])
-test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(100)])
+train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(64)])
+test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(128)])
 
-train_collector = ts.data.Collector(policy, train_envs, ts.data.ReplayBuffer(size=20000))
+train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=20000, buffer_num=64))
 test_collector = ts.data.Collector(policy, test_envs)
+
+
+def save(mean_rewards):
+    torch.save(policy.state_dict(), model_path / f'perf_{mean_rewards}.chk')
+    return mean_rewards
+
 
 if __name__ == '__main__':
     logger.set_level(logger.INFO)
 
     result = ts.trainer.offpolicy_trainer(
         policy, train_collector, test_collector,
-        max_epoch=10, step_per_epoch=1000, collect_per_step=10,
-        episode_per_test=100, batch_size=64,
-        train_fn=lambda epoch, env_step: policy.set_eps(0.1),
+        max_epoch=1000, step_per_epoch=1000,
+        episode_per_test=100, batch_size=8,
+        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=100,
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-        stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
-        writer=None)
-
-    print(f'training | duration: {result["duration"]}, best: {result["best_reward"]}')
-
-    perf = env.game.performance()
-    dura = env.game.avg_duration()
-
-    filepath = model_path / f'perf_{int(perf):010d}.duration_{int(dura):04d}.chk'
-    torch.save(policy.state_dict(), filepath)
+        stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold)

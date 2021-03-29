@@ -8,7 +8,6 @@ import itertools
 import gym_selfx.selfx.selfx as selfx
 
 from affordable.affordable import Affordable
-from affordable.game import AbstractGame
 from gym_selfx.render.draw import OpencvDrawFuncs
 from Box2D.Box2D import (b2CircleShape as circleShape, b2World)
 from collections import deque
