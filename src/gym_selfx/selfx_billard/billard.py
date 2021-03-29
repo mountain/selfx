@@ -7,6 +7,8 @@ import itertools
 
 import gym_selfx.selfx.selfx as selfx
 
+from affordable.affordable import Affordable
+from affordable.game import AbstractGame
 from gym_selfx.render.draw import OpencvDrawFuncs
 from Box2D.Box2D import (b2CircleShape as circleShape, b2World)
 from collections import deque
@@ -204,30 +206,30 @@ class SelfxBillardInnerWorld(SelfxBillardWorld):
             'add_obstacle'
         )
 
-    def step(self, **pwargs):
-        super(SelfxBillardInnerWorld, self).step(pwargs)
-        action = get_action(self.ctx, self, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            super(SelfxBillardInnerWorld, self).act(actions)
 
-        if action.inner == 'up':
-            self.up()
+            if action.inner == 'up':
+                self.up()
 
-        if action.inner == 'dn':
-            self.dn()
+            if action.inner == 'dn':
+                self.dn()
 
-        if action.inner == 'lf':
-            self.lf()
+            if action.inner == 'lf':
+                self.lf()
 
-        if action.inner == 'rt':
-            self.rt()
+            if action.inner == 'rt':
+                self.rt()
 
-        if action.inner == 'add_obstacle':
-            selfx.debug = True
-            self.add_obstacle()
+            if action.inner == 'add_obstacle':
+                selfx.debug = True
+                self.add_obstacle()
 
-        self.b2.Step(TIME_STEP, 10, 10)
-        for b in self.b2.bodies:
-            x, y = b.position
-            b.position = x % self.x_threshold, y % self.y_threshold
+            self.b2.Step(TIME_STEP, 10, 10)
+            for b in self.b2.bodies:
+                x, y = b.position
+                b.position = x % self.x_threshold, y % self.y_threshold
 
 
 class SelfxBillardOuterWorld(SelfxBillardWorld):
@@ -241,9 +243,8 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
             self.random_walk(1000)
             self.add_obstacle()
 
-    def step(self, **pwargs):
-        super(SelfxBillardOuterWorld, self).step(**pwargs)
-        action = get_action(self.ctx, self, **pwargs)
+    def act(self, action):
+        super(SelfxBillardOuterWorld, self).act(action)
         self.fire_step_event(action=action)
 
         if random.random() > 1 - np.exp(-len(self.b2.bodies) / 30):
@@ -256,7 +257,7 @@ class SelfxBillardOuterWorld(SelfxBillardWorld):
             b.position = x % self.x_threshold, y % self.y_threshold
 
 
-class SelfxBillardAgentMouth(selfx.SelfxAffordable):
+class SelfxBillardAgentMouth(Affordable):
     def __init__(self, ctx):
         super(SelfxBillardAgentMouth, self).__init__(ctx, 'mouth')
 
@@ -275,17 +276,16 @@ class SelfxBillardAgentMouth(selfx.SelfxAffordable):
     def reset(self):
         self._state = self.available_states()[0]
 
-    def on_stepped(self, src, **pwargs):
-        action = get_action(self.ctx, src, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            if action.mouth == 'open':
+                self.open()
 
-        if action.mouth == 'open':
-            self.open()
-
-        if action.mouth == 'close':
-            self.close()
+            if action.mouth == 'close':
+                self.close()
 
 
-class SelfxBillardAgentGear(selfx.SelfxAffordable):
+class SelfxBillardAgentGear(Affordable):
     def __init__(self, ctx):
         super(SelfxBillardAgentGear, self).__init__(ctx, 'gear')
 
@@ -313,23 +313,22 @@ class SelfxBillardAgentGear(selfx.SelfxAffordable):
     def reset(self):
         self._state = self.available_states()[0]
 
-    def on_stepped(self, src, **pwargs):
-        action = get_action(self.ctx, src, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            if action.gear == 'gear0':
+                self.gear0()
 
-        if action.gear == 'gear0':
-            self.gear0()
+            if action.gear == 'gear1':
+                self.gear1()
 
-        if action.gear == 'gear1':
-            self.gear1()
+            if action.gear == 'gear2':
+                self.gear2()
 
-        if action.gear == 'gear2':
-            self.gear2()
-
-        if action.gear == 'gear3':
-            self.gear3()
+            if action.gear == 'gear3':
+                self.gear3()
 
 
-class SelfxBillardAgentBrake(selfx.SelfxAffordable):
+class SelfxBillardAgentBrake(Affordable):
     def __init__(self, ctx):
         super(SelfxBillardAgentBrake, self).__init__(ctx, 'brake')
 
@@ -354,17 +353,16 @@ class SelfxBillardAgentBrake(selfx.SelfxAffordable):
     def reset(self):
         self._state = self.available_states()[0]
 
-    def on_stepped(self, src, **pwargs):
-        action = get_action(self.ctx, src, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            if action.brake == 'up':
+                self.up()
 
-        if action.brake == 'up':
-            self.up()
-
-        if action.brake == 'dn':
-            self.down()
+            if action.brake == 'dn':
+                self.down()
 
 
-class SelfxBillardAgentSteer(selfx.SelfxAffordable):
+class SelfxBillardAgentSteer(Affordable):
     def __init__(self, ctx):
         super(SelfxBillardAgentSteer, self).__init__(ctx, 'steer')
 
@@ -406,23 +404,22 @@ class SelfxBillardAgentSteer(selfx.SelfxAffordable):
     def reset(self):
         self._state = self.available_states()[0]
 
-    def on_stepped(self, src, **pwargs):
-        action = get_action(self.ctx, src, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            if action.steer == 'o':
+                self.o()
 
-        if action.steer == 'o':
-            self.o()
+            if action.steer == 'l1':
+                self.l1()
 
-        if action.steer == 'l1':
-            self.l1()
+            if action.steer == 'l2':
+                self.l2()
 
-        if action.steer == 'l2':
-            self.l2()
+            if action.steer == 'r1':
+                self.r1()
 
-        if action.steer == 'r1':
-            self.r1()
-
-        if action.steer == 'r2':
-            self.r2()
+            if action.steer == 'r2':
+                self.r2()
 
 
 class SelfxBillardAgent(selfx.SelfxAgent):
@@ -471,53 +468,54 @@ class SelfxBillardAgent(selfx.SelfxAgent):
     def direction(self):
         return self.b2.linearVelocity
 
-    def on_stepped(self, src, **pwargs):
-        super(SelfxBillardAgent, self).on_stepped(src, **pwargs)
+    def act(self, actions):
+        for action in actions:
+            super(SelfxBillardAgent, self).act(action)
 
-        gear_value = self.gear.value()
-        brake_value = self.brake.value()
-        steer_value = self.steer.value()
+            gear_value = self.gear.value()
+            brake_value = self.brake.value()
+            steer_value = self.steer.value()
 
-        vx, vy = self.b2.linearVelocity
-        angle = np.arctan2(vy, vx)
-        fx = gear_value * np.cos(angle + steer_value)
-        fy = gear_value * np.sin(angle + steer_value)
-        ax = (-0.01 * vx - 0.1 * brake_value * vx + fx) / self.b2.mass
-        ay = (-0.01 * vy - 0.1 * brake_value * vy + fy) / self.b2.mass
-        vx = vx + ax * TIME_STEP
-        vy = vy + ay * TIME_STEP
-        self.b2.linearVelocity = vx, vy
-        energy_loss = (fx * vx + fy * vy) * TIME_STEP
-        self.b2.userData['ax'] = ax
-        self.b2.userData['ay'] = ay
-        self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
-        self.b2.mass = self.b2.mass - energy_loss / ENERGY_PER_MASS
+            vx, vy = self.b2.linearVelocity
+            angle = np.arctan2(vy, vx)
+            fx = gear_value * np.cos(angle + steer_value)
+            fy = gear_value * np.sin(angle + steer_value)
+            ax = (-0.01 * vx - 0.1 * brake_value * vx + fx) / self.b2.mass
+            ay = (-0.01 * vy - 0.1 * brake_value * vy + fy) / self.b2.mass
+            vx = vx + ax * TIME_STEP
+            vy = vy + ay * TIME_STEP
+            self.b2.linearVelocity = vx, vy
+            energy_loss = (fx * vx + fy * vy) * TIME_STEP
+            self.b2.userData['ax'] = ax
+            self.b2.userData['ay'] = ay
+            self.b2.userData['energy'] = self.b2.userData['energy'] - energy_loss
+            self.b2.mass = self.b2.mass - energy_loss / ENERGY_PER_MASS
 
-        mouth_open = self.ctx['game'].state().mouth == 'opened'
-        if mouth_open:
-            self.b2.userData['color'] = (255, 192, 0)
-        else:
-            self.b2.userData['color'] = (255, 255, 0)
+            mouth_open = self.ctx['game'].state().mouth == 'opened'
+            if mouth_open:
+                self.b2.userData['color'] = (255, 192, 0)
+            else:
+                self.b2.userData['color'] = (255, 255, 0)
 
-        for contact in self.b2.contacts:
-            other = contact.other
-            if other.userData['type'] == 'obstacle':
-                self.b2.userData['energy'] = self.b2.userData['energy'] - ENERGY_PER_MASS
-                self.b2.mass = self.b2.mass - 1
-            elif other.userData['type'] == 'candy':
-                if mouth_open:
-                    mass0 = self.b2.mass
-                    mass1 = other.mass
-                    self.b2.userData['energy'] = self.b2.userData['energy'] + ENERGY_PER_MASS * mass1
-                    self.b2.mass = mass0 + mass1
+            for contact in self.b2.contacts:
+                other = contact.other
+                if other.userData['type'] == 'obstacle':
+                    self.b2.userData['energy'] = self.b2.userData['energy'] - ENERGY_PER_MASS
+                    self.b2.mass = self.b2.mass - 1
+                elif other.userData['type'] == 'candy':
+                    if mouth_open:
+                        mass0 = self.b2.mass
+                        mass1 = other.mass
+                        self.b2.userData['energy'] = self.b2.userData['energy'] + ENERGY_PER_MASS * mass1
+                        self.b2.mass = mass0 + mass1
 
-                    vx, vy = self.b2.linearVelocity
-                    ux, uy = other.linearVelocity
-                    wx = (vx * mass0 + ux * mass1) / self.b2.mass
-                    wy = (vy * mass0 + uy * mass1) / self.b2.mass
-                    self.b2.linearVelocity = wx, wy
+                        vx, vy = self.b2.linearVelocity
+                        ux, uy = other.linearVelocity
+                        wx = (vx * mass0 + ux * mass1) / self.b2.mass
+                        wy = (vy * mass0 + uy * mass1) / self.b2.mass
+                        self.b2.linearVelocity = wx, wy
 
-                    self.ctx['outer'].b2.DestroyBody(other)
+                        self.ctx['outer'].b2.DestroyBody(other)
 
 
 class SelfxBillardEye(selfx.SelfxEye):

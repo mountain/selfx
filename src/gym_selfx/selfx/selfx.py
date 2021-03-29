@@ -3,6 +3,8 @@
 import random
 import numpy as np
 
+from affordable.game import AbstractGame, Affordable
+
 
 NOOP = 'noop'
 IDLE = 'idle'
@@ -28,120 +30,13 @@ class SelfxToolkit:
         return SelfxScope(ctx)
 
 
-class SelfxAffordable:
-    def __init__(self, ctx, name):
-        self._name = name
-        self.ctx = ctx
-        self.changed_handlers = []
-
-        self._state = self.available_states()[0]
-        self._action =  self.available_actions()[0]
-
-    def name(self):
-        return self._name
-
-    def subaffordables(self):
-        return ()
-
-    def available_actions(self):
-        return (NOOP, )
-
-    def available_states(self):
-        return (IDLE, )
-
-    def action(self):
-        return self._action
-
-    def state(self):
-        return self._state
-
-    def reset(self):
-        for sub in self.subaffordables():
-            sub.reset()
-
-    def on_stepped(self, src, **pwargs):
-        pass
-
-    def add_change_handler(self, handler):
-        if handler not in self.changed_handlers:
-            self.changed_handlers.append(handler)
-
-    def fire_changed_event(self, **pwargs):
-        for h in self.changed_handlers:
-            h.on_changed(self, **pwargs)
-
-
-class SelfxGame:
+class SelfxGame(AbstractGame):
     def __init__(self, ctx):
-        self.ctx = ctx
-        self.affordables = []
-        self.actions_list = []
-        self.states_list = []
+        super(SelfxGame, self).__init__(ctx, 'game')
         self.policy = None
 
-    def add_affordable(self, affordable):
-        for sub in affordable.subaffordables():
-            self.affordables.append(sub)
-        self.affordables.append(affordable)
 
-        self.ctx['outer'].add_step_handler(affordable)
-        affordable.add_change_handler(self.ctx['outer'])
-        for sub in affordable.subaffordables():
-            self.ctx['outer'].add_step_handler(sub)
-            sub.add_change_handler(self.ctx['outer'])
-
-        import itertools, collections
-
-        fields = [a.name() for a in self.affordables]
-        self.actions_list = [collections.namedtuple('Action', fields)._make(actions)
-                             for actions in itertools.product(*[a.available_actions() for a in self.affordables])]
-
-        holders = self.affordables + [self.ctx['agent'].eye]
-        fields = [a.name() for a in holders]
-        self.states_list = [collections.namedtuple('State', fields)._make(states)
-                            for states in itertools.product(*[h.available_states() for h in holders])]
-
-    def action_space(self):
-        return self.actions_list
-
-    def state_space(self):
-        return self.states_list
-
-    def action(self):
-        import collections
-
-        fields = [a.name() for a in self.affordables]
-        a = collections.namedtuple('Action', fields)._make([a.action() for a in self.affordables])
-        return a
-
-    def state(self):
-        import collections
-
-        holders = self.affordables + [self.ctx['agent'].eye]
-        fields = [a.name() for a in holders]
-        s = collections.namedtuple('State', fields)._make([a.state() for a in holders])
-        return s
-
-    def act(self, observation, reward, done):
-        if self.policy is None:
-            return random.sample(self.action_space(), 1)
-        else:
-            return self.policy(observation, reward, done)
-
-    def reward(self):
-        return 0.0
-
-    def reset(self):
-        pass
-
-    def exit_condition(self):
-        return False
-
-    def force_condition(self):
-        return random.random() < 0.005
-
-
-class SelfxWorld(SelfxAffordable):
+class SelfxWorld(Affordable):
     def __init__(self, ctx, name):
         super(SelfxWorld, self).__init__(ctx, name)
         self.step_handlers = []
@@ -149,7 +44,7 @@ class SelfxWorld(SelfxAffordable):
     def reset(self):
         pass
 
-    def step(self, action):
+    def act(self, action):
         self.fire_step_event(action=action)
 
     def render(self, mode='rgb_array', close=False):
@@ -169,8 +64,11 @@ class SelfxWorld(SelfxAffordable):
         for h in self.step_handlers:
             h.on_stepped(self, **pwargs)
 
+    def act(self, action):
+        self.fire_step_event()
 
-class SelfxAgent(SelfxAffordable):
+
+class SelfxAgent(Affordable):
     def __init__(self, ctx, eye):
         super(SelfxAgent, self).__init__(ctx, 'monster')
         self.inner_world = ctx['inner']
@@ -183,6 +81,9 @@ class SelfxAgent(SelfxAffordable):
         return 0, 0
 
     def add_move_handler(self, handler):
+        pass
+
+    def act(self, action):
         pass
 
 

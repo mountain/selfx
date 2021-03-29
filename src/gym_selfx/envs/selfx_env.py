@@ -57,16 +57,13 @@ class SelfXEnv(gym.Env, utils.EzPickle):
         return self.game.state()
 
     def step(self, action):
-        self.inner.step(action=action)
-        self.outer.step(action=action)
-
         reward = self.game.reward()
-
-        _state = self.state()
-
+        state = self.state()
         episode_over = self.game.exit_condition() or self.game.force_condition()
 
-        return _state, reward, episode_over, {}
+        self.game.act(state, reward, episode_over)
+
+        return state, reward, episode_over, {}
 
     def reset(self):
         self.inner.reset()

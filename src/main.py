@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # bootstrap
 import gym_selfx.selfx
 
 import gym
+import time
 import argparse
 
 from gym import wrappers, logger
@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     outdir = 'results/selfx-billard'
     env = wrappers.Monitor(env, directory=outdir, force=True)
-    env.seed(0)
+    env.seed(int(time.time()))
     game = env.game
 
     episode_count = opt.n
