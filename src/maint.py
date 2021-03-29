@@ -75,7 +75,7 @@ class Net(nn.Module):
         return result, state
 
 
-net = Net([screen_height, screen_width], n_actions)
+net = nn.DataParallel(Net([screen_height, screen_width], n_actions))
 if cuda:
     net = net.cuda().to(device)
 
