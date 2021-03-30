@@ -18,6 +18,7 @@ from pathlib import Path
 from gym import wrappers, logger
 from tianshou.utils.net.discrete import Actor
 from leibniz.nn.net import resnet
+from leibniz.nn.layer.hyperbolic import HyperBottleneck
 
 
 parser = argparse.ArgumentParser()
@@ -66,7 +67,7 @@ class Net(nn.Module):
         super().__init__()
         h, w, a = state_shape[0] // 3, state_shape[1], action_shape
         self.output_dim = a
-        self.resnet = resnet(9, a, layers=4, ratio=0,
+        self.resnet = resnet(9, a, layers=4, ratio=1, block=HyperBottleneck,
             vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
             factors=[1, 1, 1, 1], spatial=(h, w))
         if cuda:
