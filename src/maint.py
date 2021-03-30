@@ -15,6 +15,7 @@ import torchvision.transforms as T
 
 from pathlib import Path
 from gym import wrappers, logger
+from torch.utils.tensorboard import SummaryWriter
 
 from tianshou.utils.net.discrete import Actor
 from gym_selfx.nn.modelt import Net
@@ -30,6 +31,7 @@ if cuda:
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
 device = 'cuda' if cuda else 'cpu'
 
+writer = SummaryWriter('log/dqn')
 
 logger.set_level(logger.INFO)
 outdir = 'results/selfx-billard'
@@ -60,7 +62,7 @@ init_screen = get_screen(env)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
-net = Actor(Net((screen_height, screen_width), 2 * n_actions, cuda), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
+net = Net((screen_height, screen_width), 2 * n_actions, cuda)
 if cuda:
     net = net.cuda()
 
@@ -89,4 +91,5 @@ if __name__ == '__main__':
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
         stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
         save_fn=lambda policy: save(policy),
+        writer=writer, task='selfxmaint'
     )
