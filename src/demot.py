@@ -64,7 +64,7 @@ else:
 
 model_path = Path('results/selfx-billard')
 policy_net = Actor(Net((screen_height, screen_width), 2 * n_actions, cuda), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
-policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device)['policy'])
+policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device))
 
 
 def select_action(observation, reward, done):
