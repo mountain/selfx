@@ -85,8 +85,8 @@ if __name__ == '__main__':
         reward = 0
         done = False
 
-        last_screen = get_screen(env, device)
-        current_screen = get_screen(env, device)
+        last_screen = get_screen(env)
+        current_screen = get_screen(env)
         state = torch.cat((current_screen, last_screen), dim=1)
         i = 0
         while True:
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             _, reward, done, info = env.step(action)
 
             last_screen = current_screen
-            current_screen = get_screen(env, device)
+            current_screen = get_screen(env)
             state = torch.cat((current_screen, last_screen), dim=1)
 
             if done or i > 54000:
