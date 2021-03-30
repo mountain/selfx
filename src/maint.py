@@ -57,13 +57,14 @@ def get_screen(env):
 
 init_screen = get_screen(env)
 _, _, screen_height, screen_width = init_screen.shape
-n_actions = [len(env.action_space)]
+n_actions = len(env.action_space)
 
 
 class Net(nn.Module):
     def __init__(self, state_shape, action_shape):
         super().__init__()
-        h, w, a = state_shape[0], state_shape[1], action_shape[0]
+        h, w, a = state_shape[0], state_shape[1], action_shape
+        self.output_dim = a
         self.resnet = resnet(9, a, layers=4, ratio=0,
             vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
             factors=[1, 1, 1, 1], spatial=(h, w))
@@ -71,15 +72,14 @@ class Net(nn.Module):
     def forward(self, obs, state=None, info={}):
         if not isinstance(obs, torch.Tensor):
             obs = torch.tensor(obs, dtype=torch.float)
-            if cuda:
-                obs = obs.cuda()
+            obs = obs.cuda() if cuda else obs
 
         result = self.resnet(obs)
         return result, state
 
 
 net = nn.DataParallel(Actor(
-    Net([screen_height, screen_width], 2 * n_actions), action_shape=n_actions, hidden_sizes=2 * n_actions
+    Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions]
 ), device_ids=[0, 1, 2, 3], output_device=0)
 if cuda:
     net = net.cuda()
@@ -90,7 +90,7 @@ policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_ste
 train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(64)])
 test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(128)])
 
-train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=32))
+train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=64))
 test_collector = ts.data.Collector(policy, test_envs)
 
 
