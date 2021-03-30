@@ -29,7 +29,6 @@ cuda = True if torch.cuda.is_available() else False
 if cuda:
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
 
-device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
 
 logger.set_level(logger.INFO)
 outdir = 'results/selfx-billard'
@@ -47,15 +46,16 @@ resize = T.Compose([
 ])
 
 
-def get_screen(env, device):
+def get_screen(env):
     screen = env.render(mode='rgb_array').transpose((2, 0, 1))
     _, screen_height, screen_width = screen.shape
     screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
     screen = torch.from_numpy(screen)
-    return resize(screen).unsqueeze(0).to(device)
+    screen = resize(screen).unsqueeze(0)
+    return screen.cuda() if cuda else screen
 
 
-init_screen = get_screen(env, device)
+init_screen = get_screen(env)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = [len(env.action_space)]
 
@@ -72,7 +72,7 @@ class Net(nn.Module):
         if not isinstance(obs, torch.Tensor):
             obs = torch.tensor(obs, dtype=torch.float)
             if cuda:
-                obs = obs.cuda().to(device)
+                obs = obs.cuda()
 
         result = self.resnet(obs)
         return result, state
@@ -82,7 +82,7 @@ net = nn.DataParallel(Actor(
     Net([screen_height, screen_width], 2 * n_actions), action_shape=n_actions, hidden_sizes=2 * n_actions
 ), device_ids=[0, 1, 2, 3], output_device=0)
 if cuda:
-    net = net.cuda().to(device)
+    net = net.cuda()
 
 optimizer = optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
