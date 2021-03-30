@@ -68,6 +68,8 @@ class Net(nn.Module):
         self.resnet = resnet(9, a, layers=4, ratio=0,
             vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
             factors=[1, 1, 1, 1], spatial=(h, w))
+        if cuda:
+            self.resnet.cuda()
 
     def forward(self, obs, state=None, info={}):
         if not isinstance(obs, torch.Tensor):
