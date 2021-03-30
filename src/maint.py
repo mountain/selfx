@@ -28,6 +28,7 @@ opt = parser.parse_args()
 cuda = True if torch.cuda.is_available() else False
 if cuda:
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
+device = 'cuda' if cuda else 'cpu'
 
 
 logger.set_level(logger.INFO)
@@ -80,15 +81,15 @@ class Net(nn.Module):
         return result, state
 
 
-net = Actor(Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device='cuda')
+net = Actor(Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
 if cuda:
     net = net.cuda()
 
 optimizer = optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 
-train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
-test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
+train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(16)])
+test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(16)])
 
 train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=64))
 test_collector = ts.data.Collector(policy, test_envs)
