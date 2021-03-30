@@ -91,7 +91,7 @@ policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_ste
 train_envs = ts.env.SubprocVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(16)])
 test_envs = ts.env.SubprocVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(32)])
 
-train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=64))
+train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=8192, buffer_num=64), exploration_noise=True)
 test_collector = ts.data.Collector(policy, test_envs)
 
 
@@ -105,8 +105,10 @@ if __name__ == '__main__':
 
     result = ts.trainer.offpolicy_trainer(
         policy, train_collector, test_collector,
-        max_epoch=1000, step_per_epoch=1000,
-        episode_per_test=100, batch_size=8,
-        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=100,
+        max_epoch=1024, step_per_epoch=1024,
+        episode_per_test=128, batch_size=8,
+        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=128,
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
-        stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold)
+        stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
+        save_fn=lambda mean_rewards: save(mean_rewards),
+    )

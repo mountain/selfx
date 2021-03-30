@@ -12,4 +12,5 @@ register(
 register(
     id='selfx-billard-v0',
     entry_point='gym_selfx.envs:SelfxBillardEnv',
+    reward_threshold=50000,
 )
