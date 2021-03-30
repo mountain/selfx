@@ -73,7 +73,8 @@ policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1]
 def select_action(observation, reward, done):
     with torch.no_grad():
         expected_reward = policy_net(observation)
-        return expected_reward.max(1)[1].view(1, 1)
+        index = expected_reward.max(1)[1].view(1, 1)
+        return env.action_space[index]
 
 
 if __name__ == '__main__':
