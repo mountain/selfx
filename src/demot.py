@@ -53,7 +53,7 @@ def get_screen(env):
     screen = resize(screen).unsqueeze(0)
     return screen.cuda() if cuda else screen
 
-init_screen = get_screen(env, device)
+init_screen = get_screen(env)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
