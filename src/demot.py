@@ -6,9 +6,9 @@ import gym_selfx.selfx
 
 import gym
 import argparse
-import torch
 import os
 import numpy as np
+import torch
 
 from pathlib import Path
 from gym import wrappers, logger
@@ -72,9 +72,22 @@ policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1]
 
 def select_action(observation, reward, done):
     with torch.no_grad():
-        expected_reward = policy_net(observation)
-        index = expected_reward.max(1)[1].view(1, 1)
-        return env.action_space[index]
+        if torch.is_tensor(observation):
+            b, _, h, w = observation.size()
+            r, g, b = observation[:, 0:1], observation[:, 1:2], observation[:, 2:3]
+            r1, r2, r3 = r[:, :, :h // 3], r[:, :, h // 3:2 * h // 3], r[:, :, 2 * h // 3:]
+            g1, g2, g3 = g[:, :, :h // 3], g[:, :, h // 3:2 * h // 3], g[:, :, 2 * h // 3:]
+            b1, b2, b3 = b[:, :, :h // 3], b[:, :, h // 3:2 * h // 3], b[:, :, 2 * h // 3:]
+            observation = torch.cat((r1, g1, b1, r2, g2, b2, r3, g3, b3), dim=1)
+        else:
+            c, h, w = observation.shape
+            observation = np.reshape(observation, (1, c, h, w))
+
+        batch = ts.data.Batch({'obs': observation, 'info': {}})
+        expected_reward = policy_net(batch)
+        index = torch.argmax(expected_reward.logits[0], dim=0).item()
+        action = env.action_space[index]
+        return [action]
 
 
 if __name__ == '__main__':
@@ -86,19 +99,15 @@ if __name__ == '__main__':
         reward = 0
         done = False
 
-        last_screen = get_screen(env)
-        current_screen = get_screen(env)
-        state = torch.cat((current_screen, last_screen), dim=1)
         i = 0
+        state = get_screen(env)
         while True:
             i += 1
 
             action = env.game.act(state, reward, done)
             _, reward, done, info = env.step(action)
 
-            last_screen = current_screen
-            current_screen = get_screen(env)
-            state = torch.cat((current_screen, last_screen), dim=1)
+            state = get_screen(env)
 
             if done or i > 54000:
                 break
