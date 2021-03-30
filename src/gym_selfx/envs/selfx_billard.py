@@ -13,8 +13,10 @@ logger = logging.getLogger(__name__)
 class SelfxBillardEnv(SelfXEnv):
     def __init__(self):
         super(SelfxBillardEnv, self).__init__(billard.SelfxBillardToolkit())
+        self.curr_state = self.current()
+        self.update()
 
-    def state(self):
+    def current(self):
         img = self.render(mode='rgb_array', close=False)
         h, w, c = img.shape
         h = h // 3
@@ -26,3 +28,14 @@ class SelfxBillardEnv(SelfXEnv):
         g1, g2, g3 = g[:, :h, :], g[:, h:2 * h, :], g[:, 2 * h:, :]
         b1, b2, b3 = b[:, :h, :], b[:, h:2 * h, :], b[:, 2 * h:, :]
         return np.concatenate((r1, g1, b1, r2, g2, b2, r3, g3, b3), axis=0)
+
+    def update(self):
+        self.last_state = self.curr_state
+        self.curr_state = self.current()
+
+    def state(self):
+        return np.concatenate((self.last_state, self.curr_state), axis=0)
+
+    def step(self, action):
+        self.update()
+        return super.step(action)
