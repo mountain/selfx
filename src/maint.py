@@ -42,7 +42,7 @@ env.reset()
 
 resize = T.Compose([
     T.ToPILImage(),
-    T.ToTensor()
+    T.ToTensor(),
 ])
 
 
@@ -80,7 +80,7 @@ class Net(nn.Module):
         return result, state
 
 
-net = Actor(Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions])
+net = Actor(Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device='cuda')
 if cuda:
     net = net.cuda()
 
