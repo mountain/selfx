@@ -85,8 +85,8 @@ if cuda:
 optimizer = optim.Adam(net.parameters())
 policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 
-train_envs = ts.env.RayVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
-test_envs = ts.env.RayVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
+train_envs = ts.env.ShmemVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
+test_envs = ts.env.ShmemVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(2)])
 
 train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=64))
 test_collector = ts.data.Collector(policy, test_envs)

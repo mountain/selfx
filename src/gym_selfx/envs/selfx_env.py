@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 
 import gym
-import gym_selfx.selfx.selfx as selfx
 
 from gym import utils
 
@@ -15,15 +14,20 @@ logger = logging.getLogger(__name__)
 
 class SelfXEnv(gym.Env, utils.EzPickle):
     metadata = {'render.modes': ['rgb_array']}
+    _ezpickle_args = {}
 
-    def __init__(self, toolkit):
+    def __init__(self, toolkit, game=None, inner=None, oute=None, scope=None, agent=None):
+        gym.Env.__init__(self)
+        utils.EzPickle.__init__(self, game, inner, oute, scope, agent)
+
         self.toolkit = toolkit
-
         ctx = {}
+
         self.game = self.toolkit.build_game(ctx)
         self.inner = self.toolkit.build_inner_world(ctx)
         self.outer = self.toolkit.build_outer_world(ctx)
         self.scope = self.toolkit.build_scope(ctx)
+
         ctx.update({
             'env': self,
             'game': self.game,
