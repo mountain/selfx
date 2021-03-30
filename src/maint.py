@@ -29,7 +29,8 @@ cuda = True if torch.cuda.is_available() else False
 if cuda:
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.g
 
-device = torch.device(int(opt.g) if torch.cuda.is_available() else "cpu")
+device = torch.device('cuda' if torch.cuda.is_available() else "cpu")
+
 logger.set_level(logger.INFO)
 outdir = 'results/selfx-billard'
 model_path = Path(outdir)
@@ -77,7 +78,9 @@ class Net(nn.Module):
         return result, state
 
 
-net = nn.DataParallel(Net([screen_height, screen_width], n_actions))
+net = nn.DataParallel(Actor(
+    Net([screen_height, screen_width], 2 * n_actions), action_shape=n_actions, hidden_sizes=2 * n_actions
+), device_ids=[0, 1, 2, 3], output_device=0)
 if cuda:
     net = net.cuda().to(device)
 
