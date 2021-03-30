@@ -10,15 +10,14 @@ import tianshou as ts
 import numpy as np
 
 import torch
-import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as T
 
 from pathlib import Path
 from gym import wrappers, logger
+
 from tianshou.utils.net.discrete import Actor
-from leibniz.nn.net import resnet
-from leibniz.nn.layer.hyperbolic import HyperBottleneck
+from gym_selfx.nn.modelt import Net
 
 
 parser = argparse.ArgumentParser()
@@ -61,28 +60,7 @@ init_screen = get_screen(env)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
-
-class Net(nn.Module):
-    def __init__(self, state_shape, action_shape):
-        super().__init__()
-        h, w, a = state_shape[0] // 3, state_shape[1], action_shape
-        self.output_dim = a
-        self.resnet = resnet(9, a, layers=4, ratio=1, block=HyperBottleneck,
-            vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
-            factors=[1, 1, 1, 1], spatial=(h, w))
-        if cuda:
-            self.resnet.cuda()
-
-    def forward(self, obs, state=None, info={}):
-        if not isinstance(obs, torch.Tensor):
-            obs = torch.tensor(obs, dtype=torch.float)
-            obs = obs.cuda() if cuda else obs
-
-        result = self.resnet(obs)
-        return result, state
-
-
-net = Actor(Net((screen_height, screen_width), 2 * n_actions), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
+net = Actor(Net((screen_height, screen_width), 2 * n_actions, cuda), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
 if cuda:
     net = net.cuda()
 
