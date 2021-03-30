@@ -43,7 +43,7 @@ class Recurrent(nn.Module):
 class Net(nn.Module):
     def __init__(self, state_shape, action_shape, cuda):
         super().__init__()
-        self.cuda = cuda
+        self.flag = cuda
         h, w, a = state_shape[0] // 3, state_shape[1], action_shape
         self.output_dim = a
         self.max_action_num = a
@@ -54,7 +54,7 @@ class Net(nn.Module):
     def forward(self, obs, state=None, info={}):
         if not isinstance(obs, th.Tensor):
             obs = th.tensor(obs, dtype=th.float)
-            obs = obs.cuda() if self.cuda else obs
+            obs = obs.cuda() if self.flag else obs
 
         result = self.recrr(self.resnet(obs), state=state)
 

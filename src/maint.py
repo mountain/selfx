@@ -16,8 +16,6 @@ import torchvision.transforms as T
 from pathlib import Path
 from gym import wrappers, logger
 from torch.utils.tensorboard import SummaryWriter
-
-from tianshou.utils.net.discrete import Actor
 from gym_selfx.nn.modelt import Net
 
 
