@@ -21,7 +21,7 @@ from leibniz.nn.net import resnet
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", type=int, default=256000, help="number of epochs of training")
+parser.add_argument("-n", type=int, default=1024, help="number of epochs of training")
 parser.add_argument("-g", type=str, default='0', help="index of gpu")
 opt = parser.parse_args()
 
@@ -97,6 +97,7 @@ test_collector = ts.data.Collector(policy, test_envs)
 
 def save(mean_rewards):
     torch.save(policy.state_dict(), model_path / f'perf_{mean_rewards}.chk')
+    test_collector.collect(n_episode=1, render=1 / 35)
     return mean_rewards
 
 
