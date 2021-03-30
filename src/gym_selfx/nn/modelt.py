@@ -46,6 +46,7 @@ class Net(nn.Module):
         self.cuda = cuda
         h, w, a = state_shape[0] // 3, state_shape[1], action_shape
         self.output_dim = a
+        self.max_action_num = a
         self.resnet = resnet(18, 2 * a, layers=4, ratio=-2, block=HyperBottleneck,
             vblks=[1, 1, 1, 1], scales=[-2, -2, -2, -2], factors=[1, 1, 1, 1], spatial=(h, w))
         self.recrr = Recurrent(2 * a, a, 4 * a)
@@ -55,6 +56,6 @@ class Net(nn.Module):
             obs = th.tensor(obs, dtype=th.float)
             obs = obs.cuda() if self.cuda else obs
 
-        result = self.recrr(self.resnet(obs))
+        result = self.recrr(self.resnet(obs), state=state)
 
-        return result, state
+        return result
