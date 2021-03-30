@@ -12,7 +12,7 @@ class Net(nn.Module):
         self.cuda = cuda
         h, w, a = state_shape[0] // 3, state_shape[1], action_shape
         self.output_dim = a
-        self.resnet = resnet(9, a, layers=4, ratio=0, block=HyperBottleneck,
+        self.resnet = resnet(9, a, layers=4, ratio=-1, block=HyperBottleneck,
             vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
             factors=[1, 1, 1, 1], spatial=(h, w))
         if cuda:
