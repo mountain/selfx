@@ -63,7 +63,9 @@ class Net(nn.Module):
     def __init__(self, state_shape, action_shape):
         super().__init__()
         h, w, a = state_shape[0], state_shape[1], action_shape[0]
-        self.resnet = resnet(3, a, layers=4, ratio=0, vblks=[1, 1, 1, 1], scales=[-1, -1, -1, -1], factors=[1, 1, 1, 1], spatial=(h, w))
+        self.resnet = resnet(9, a, layers=4, ratio=0,
+            vblks=[2, 2, 2, 2], scales=[-2, -2, -2, -2],
+            factors=[1, 1, 1, 1], spatial=(h, w))
 
     def forward(self, obs, state=None, info={}):
         if not isinstance(obs, torch.Tensor):
@@ -85,7 +87,7 @@ policy = ts.policy.DQNPolicy(net, optimizer, discount_factor=0.9, estimation_ste
 train_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(64)])
 test_envs = ts.env.DummyVectorEnv([lambda: gym.make('selfx-billard-v0') for _ in range(128)])
 
-train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=20000, buffer_num=64))
+train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuffer(total_size=10000, buffer_num=32))
 test_collector = ts.data.Collector(policy, test_envs)
 
 
