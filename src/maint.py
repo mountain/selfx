@@ -95,10 +95,9 @@ train_collector = ts.data.Collector(policy, train_envs, ts.data.VectorReplayBuff
 test_collector = ts.data.Collector(policy, test_envs)
 
 
-def save(mean_rewards):
-    torch.save(policy.state_dict(), model_path / f'perf_{mean_rewards}.chk')
+def save(policy):
     test_collector.collect(n_episode=1, render=1 / 35)
-    return mean_rewards
+    torch.save(policy.state_dict(), model_path / f'policy.chk')
 
 
 if __name__ == '__main__':
@@ -106,10 +105,10 @@ if __name__ == '__main__':
 
     result = ts.trainer.offpolicy_trainer(
         policy, train_collector, test_collector,
-        max_epoch=1024, step_per_epoch=1024,
-        episode_per_test=128, batch_size=8,
+        max_epoch=8192, step_per_epoch=512,
+        episode_per_test=128, batch_size=24,
         train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=128,
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
         stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
-        save_fn=lambda mean_rewards: save(mean_rewards),
+        save_fn=lambda policy: save(policy),
     )
