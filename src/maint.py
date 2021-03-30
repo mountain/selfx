@@ -107,7 +107,7 @@ if __name__ == '__main__':
         policy, train_collector, test_collector,
         max_epoch=8192, step_per_epoch=512,
         episode_per_test=128, batch_size=24,
-        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=128,
+        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=32,
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
         stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
         save_fn=lambda policy: save(policy),
