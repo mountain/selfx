@@ -38,4 +38,4 @@ class SelfxBillardEnv(SelfXEnv):
 
     def step(self, action):
         self.update()
-        return super.step(action)
+        return super(SelfxBillardEnv, self).step(action)
