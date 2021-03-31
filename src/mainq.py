@@ -162,7 +162,7 @@ def optimize_model():
     state_batch = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.state]
     state_batch = torch.cat(state_batch)
 
-    state_action_values = policy_net(state_batch).gather(1, action_batch)
+    state_action_values = policy_net(state_batch)[0].gather(1, action_batch)
     next_state_values = torch.zeros(BATCH_SIZE, device=device)
     next_state_values[non_final_mask == 1] = target_net(non_final_next_states).max(1)[0].detach()
 
