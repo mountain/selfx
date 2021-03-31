@@ -11,12 +11,12 @@ import numpy as np
 import torch
 
 from pathlib import Path
+from PIL import Image
 from gym import wrappers, logger
 
 import tianshou as ts
 import torchvision.transforms as T
 
-from tianshou.utils.net.discrete import Actor
 from gym_selfx.nn.modelt import Net
 
 
@@ -43,6 +43,7 @@ env.reset()
 
 resize = T.Compose([
     T.ToPILImage(),
+    T.Resize((256 * 3, 512), interpolation=Image.CUBIC),
     T.ToTensor(),
 ])
 
@@ -84,8 +85,8 @@ def select_action(observation, reward, done):
             observation = np.reshape(observation, (1, c, h, w))
 
         batch = ts.data.Batch({'obs': observation, 'info': {}})
-        expected_reward = policy_net(batch)
-        index = torch.argmax(expected_reward.logits[0], dim=0).item()
+        expected_reward = policy_net(batch).logits[0].view(2, 400)[0]
+        index = torch.argmax(expected_reward, dim=0).item()
         action = env.action_space[index]
         return [action]
 
@@ -100,14 +101,14 @@ if __name__ == '__main__':
         done = False
 
         i = 0
-        state = get_screen(env)
+        state = env.state()
         while True:
             i += 1
 
             action = env.game.act(state, reward, done)
             _, reward, done, info = env.step(action)
 
-            state = get_screen(env)
+            state = env.state()
 
             if done or i > 54000:
                 break
