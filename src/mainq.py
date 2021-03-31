@@ -35,6 +35,7 @@ if r.exists('selfx:prob:crossover') <= 0:
 
 
 BATCH_SIZE = 8
+STATE_SIZE = 400
 GAMMA = 0.999
 EPS_START = 0.95
 EPS_END = 0.05
@@ -150,23 +151,23 @@ def optimize_model():
 
     batch = Transition(*zip(*transitions))
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.long)
-    non_final_next_states = torch.cat([torch.tensor(s, device=device, dtype=torch.long) for s in batch.next_state if s is not None])
+    non_final_next_states = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.next_state]
+    non_final_next_states = torch.cat(non_final_next_states, dim=0)
 
     space = env.action_space
     action_batch = [torch.tensor([space.index(a) for a in actions], device=device, dtype=torch.long) for actions in batch.action]
-    action_batch = torch.cat(action_batch)
+    action_batch = torch.cat(action_batch, dim=0)
 
     reward_batch = batch.reward
-    reward_batch = torch.cat(reward_batch)
+    reward_batch = torch.cat(reward_batch, dim=0)
 
     state_batch = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.state]
-    state_batch = torch.cat(state_batch)
+    state_batch = torch.cat(state_batch, dim=0)
 
-    state_action_values = policy_net(state_batch)[0].gather(1, action_batch)
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
-    next_state_values[non_final_mask == 1] = target_net(non_final_next_states).max(1)[0].detach()
-
-    expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+    state_action_values = policy_net(state_batch)[0]
+    next_state_values = torch.unsqueeze(target_net(non_final_next_states)[0], 1)
+    next_state_values = next_state_values * (non_final_mask == 1).view(-1, 1, 1)
+    expected_state_action_values = (next_state_values * GAMMA) + reward_batch.view(-1, 1, 1)
 
     loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
