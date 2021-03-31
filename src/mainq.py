@@ -173,7 +173,7 @@ def optimize_model():
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch.view(-1, 1, 1)
     expected_state_action_values = expected_state_action_values.detach()
 
-    loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+    loss = F.smooth_l1_loss(state_action_values, expected_state_action_values)
 
     optimizer.zero_grad()
     loss.backward()
