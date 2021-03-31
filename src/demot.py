@@ -65,7 +65,7 @@ else:
     pattern = opt.m
 
 model_path = Path('results/selfx-billard')
-net = Actor(Net((screen_height, screen_width), 2 * n_actions, cuda), action_shape=[n_actions], hidden_sizes=[2 * n_actions], device=device)
+net = Net((screen_height, screen_width), 2 * n_actions, cuda)
 policy_net = ts.policy.DQNPolicy(net, None, discount_factor=0.9, estimation_step=3, target_update_freq=320)
 policy_net.load_state_dict(torch.load(sorted(list(model_path.glob(pattern)))[-1], map_location=device))
 

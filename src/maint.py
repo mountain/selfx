@@ -14,6 +14,7 @@ import torch.optim as optim
 import torchvision.transforms as T
 
 from pathlib import Path
+from PIL import Image
 from gym import wrappers, logger
 from torch.utils.tensorboard import SummaryWriter
 from gym_selfx.nn.modelt import Net
@@ -43,6 +44,7 @@ env.reset()
 
 resize = T.Compose([
     T.ToPILImage(),
+    T.Resize((256 * 3, 512), interpolation=Image.CUBIC),
     T.ToTensor(),
 ])
 
@@ -83,9 +85,9 @@ if __name__ == '__main__':
 
     result = ts.trainer.offpolicy_trainer(
         policy, train_collector, test_collector,
-        max_epoch=1024, step_per_epoch=16,
+        max_epoch=1024, step_per_epoch=16, step_per_collect=32,
         episode_per_test=16, batch_size=8,
-        train_fn=lambda epoch, env_step: policy.set_eps(0.1), step_per_collect=32,
+        train_fn=lambda epoch, env_step: policy.set_eps(0.1),
         test_fn=lambda epoch, env_step: policy.set_eps(0.05),
         stop_fn=lambda mean_rewards: mean_rewards >= env.spec.reward_threshold,
         save_fn=lambda policy: save(policy),

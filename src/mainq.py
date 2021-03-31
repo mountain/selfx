@@ -23,8 +23,8 @@ import torch.nn.functional as F
 from pathlib import Path
 from itertools import count
 from gym import wrappers, logger
-from gym_selfx.nn.dqn import DQN, SimpleDQN, ReplayMemory, Transition, get_screen
-
+from gym_selfx.nn.dqn import ReplayMemory, Transition, get_screen
+from gym_selfx.nn.modelt import Net
 
 import redis
 
@@ -64,15 +64,15 @@ init_screen = get_screen(env, device)
 _, _, screen_height, screen_width = init_screen.shape
 n_actions = len(env.action_space)
 
-policy_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
-target_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
-loader_net = SimpleDQN(screen_height, screen_width, n_actions).to(device)
+policy_net = Net([screen_height, screen_width], n_actions, cuda).to(device)
+target_net = Net([screen_height, screen_width], n_actions, cuda).to(device)
+loader_net = Net([screen_height, screen_width], n_actions, cuda).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
 
 steps_done = 0
 memory = ReplayMemory(10000)
-optimizer = optim.RMSprop(policy_net.parameters())
+optimizer = optim.Adam(policy_net.parameters())
 
 
 def nature_selection():
@@ -107,6 +107,21 @@ def nature_selection():
     target_net.eval()
 
 
+def getdata(tensor):
+    b, c, h, w = tensor.size()
+    if c == 18:
+        return tensor
+    else:
+        h = h // 3
+        r = tensor[:, :, 0:1].view(1, 3 * h, w)
+        g = tensor[:, :, 1:2].view(1, 3 * h, w)
+        b = tensor[:, :, 2:3].view(1, 3 * h, w)
+        r1, r2, r3 = r[:, :h, :], r[:, h:2 * h, :], r[:, 2 * h:, :]
+        g1, g2, g3 = g[:, :h, :], g[:, h:2 * h, :], g[:, 2 * h:, :]
+        b1, b2, b3 = b[:, :h, :], b[:, h:2 * h, :], b[:, 2 * h:, :]
+        return torch.cat((r1, g1, b1, r2, g2, b2, r3, g3, b3), dim=1)
+
+
 def select_action(observation, reward, done):
     global steps_done
     sample = random.random()
@@ -115,10 +130,17 @@ def select_action(observation, reward, done):
     steps_done += 1
     if sample > eps_threshold:
         with torch.no_grad():
+            if not torch.is_tensor(observation):
+                c, h, w = observation.shape
+                observation = torch.tensor(observation, device=device, dtype=torch.float).view(1, c, h, w)
+            observation = getdata(observation)
+
             expected_reward = policy_net(observation)
-            return expected_reward.max(1)[1].view(1, 1)
+            index = expected_reward[0].argmax(dim=1)
     else:
-        return torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
+        index = torch.tensor([[random.randrange(n_actions)]], device=device, dtype=torch.long)
+
+    return [env.action_space[index.item()]]
 
 
 def optimize_model():
@@ -128,15 +150,16 @@ def optimize_model():
 
     batch = Transition(*zip(*transitions))
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), device=device, dtype=torch.long)
-    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
+    non_final_next_states = torch.cat([torch.tensor(s, device=device, dtype=torch.long) for s in batch.next_state if s is not None])
 
-    action_batch = [actions for actions in batch.action]
+    space = env.action_space
+    action_batch = [torch.tensor([space.index(a) for a in actions], device=device, dtype=torch.long) for actions in batch.action]
     action_batch = torch.cat(action_batch)
 
     reward_batch = batch.reward
     reward_batch = torch.cat(reward_batch)
 
-    state_batch = batch.state
+    state_batch = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.state]
     state_batch = torch.cat(state_batch)
 
     state_action_values = policy_net(state_batch).gather(1, action_batch)
@@ -179,9 +202,9 @@ if __name__ == '__main__':
     #             break
     #         env.render(mode='rgb_array')
 
+    env.reset()
     for i_episode in range(opt.n):
         try:
-            env.reset()
             reward = 0
             done = False
 
@@ -191,19 +214,14 @@ if __name__ == '__main__':
                 if i_episode != 0:
                     nature_selection()
 
-            last_screen = get_screen(env, device)
-            current_screen = get_screen(env, device)
-            state = torch.cat((current_screen, last_screen), dim=1)
+            state = env.state()
 
             for t in count():
                 action = game.act(state, reward, done)
-                _, reward, done, _ = env.step(action)
-                reward = torch.tensor([reward], device=device)
-
-                last_screen = current_screen
-                current_screen = get_screen(env, device)
                 if not done:
-                    next_state = torch.cat((current_screen, last_screen), dim=1)
+                    _, reward, done, _ = env.step(action)
+                    reward = torch.tensor([reward], device=device)
+                    next_state = env.state()
                 else:
                     next_state = None
 
@@ -213,6 +231,7 @@ if __name__ == '__main__':
                 optimize_model()
                 if done:
                     print(f'duration[{i_episode:04d}]:{t + 1:04d}')
+                    env.reset()
                     break
 
             if i_episode % TARGET_UPDATE == 0:
@@ -249,6 +268,8 @@ if __name__ == '__main__':
                     game.round_end()
 
         except Exception as e:
+            import traceback, sys
+            traceback.print_exception(*sys.exc_info())
             print('error:', e)
 
     env.close()

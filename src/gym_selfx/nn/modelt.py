@@ -1,3 +1,5 @@
+import random
+
 import torch as th
 import torch.nn as nn
 
@@ -30,7 +32,7 @@ class Recurrent(nn.Module):
             s, (h, c) = self.nn(s)
         else:
             # we store the stack data with [bsz, len, ...]
-            # but pytorch rnn needs [len, bsz, ...]
+            # but pyth rnn needs [len, bsz, ...]
             s, (h, c) = self.nn(s, (
                 state['h'].transpose(0, 1).contiguous(),
                 state['c'].transpose(0, 1).contiguous()))
@@ -50,6 +52,32 @@ class Net(nn.Module):
         self.resnet = resnet(18, 2 * a, layers=4, ratio=-2, block=HyperBottleneck,
             vblks=[1, 1, 1, 1], scales=[-2, -2, -2, -2], factors=[1, 1, 1, 1], spatial=(h, w))
         self.recrr = Recurrent(2 * a, a, 4 * a)
+
+        self.co1 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)
+        self.co2 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)
+        self.co3 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)
+        self.co4 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)
+
+    def crossover(self, another):
+        coeff = th.sigmoid(self.co1 + another.co1)
+
+        self.resnet.enconvs[0].transform.conv.weight = th.nn.Parameter(self.enconvs[0].transform.conv.weight * coeff + another.enconvs[0].transform.conv.weight * (1 - coeff))
+        self.resnet.enconvs[0].transform.conv.bias = th.nn.Parameter(self.enconvs[0].transform.conv.bias * coeff + another.enconvs[0].transform.conv.bias * (1 - coeff))
+        coeff = th.sigmoid(self.co2 + another.co2)
+        self.resnet.enconvs[1].transform.conv.weight = th.nn.Parameter(self.enconvs[1].transform.conv.weight * coeff + another.enconvs[1].transform.conv.weight * (1 - coeff))
+        self.resnet.enconvs[1].transform.conv.bias = th.nn.Parameter(self.enconvs[1].transform.conv.bias * coeff + another.enconvs[1].transform.conv.bias * (1 - coeff))
+        coeff = th.sigmoid(self.co3 + another.co3)
+        self.resnet.enconvs[2].transform.conv.weight = th.nn.Parameter(self.enconvs[2].transform.conv.weight * coeff + another.enconvs[2].transform.conv.weight * (1 - coeff))
+        self.resnet.enconvs[2].transform.conv.bias = th.nn.Parameter(self.enconvs[2].transform.conv.bias * coeff + another.enconvs[2].transform.conv.bias * (1 - coeff))
+        coeff = th.sigmoid(self.co4 + another.co4)
+        self.resnet.enconvs[3].transform.conv.weight = th.nn.Parameter(self.enconvs[3].transform.conv.weight * coeff + another.enconvs[3].transform.conv.weight * (1 - coeff))
+        self.resnet.enconvs[3].transform.conv.bias = th.nn.Parameter(self.enconvs[3].transform.conv.bias * coeff + another.enconvs[3].transform.conv.bias * (1 - coeff))
+
+        if random.random() > 0.90:
+            self.co1 = th.tanh(self.co1 + another.co1) * random.random()
+            self.co2 = th.tanh(self.co2 + another.co2) * random.random()
+            self.co3 = th.tanh(self.co3 + another.co3) * random.random()
+            self.co4 = th.tanh(self.co4 + another.co4) * random.random()
 
     def forward(self, obs, state=None, info={}):
         if not isinstance(obs, th.Tensor):

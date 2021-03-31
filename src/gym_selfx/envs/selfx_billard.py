@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+import torch as th
 
 from gym_selfx.selfx_billard import billard
 from gym_selfx.envs.selfx_env import SelfXEnv

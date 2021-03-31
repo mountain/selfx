@@ -109,7 +109,7 @@ class SimpleDQN(nn.Module):
 
 resize = T.Compose([
     T.ToPILImage(),
-    T.Resize((128, 64), interpolation=Image.CUBIC),
+    T.Resize((256 * 3, 512), interpolation=Image.CUBIC),
     T.ToTensor()
 ])
 
