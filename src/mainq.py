@@ -34,7 +34,7 @@ if r.exists('selfx:prob:crossover') <= 0:
     r.set('selfx:prob:crossover', '%0.8f' % 0.33333333)
 
 
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 GAMMA = 0.999
 EPS_START = 0.95
 EPS_END = 0.05
