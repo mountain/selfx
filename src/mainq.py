@@ -154,9 +154,9 @@ def optimize_model():
     non_final_next_states = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.next_state]
     non_final_next_states = torch.cat(non_final_next_states, dim=0)
 
-    space = env.action_space
-    action_batch = [torch.tensor([space.index(a) for a in actions], device=device, dtype=torch.long) for actions in batch.action]
-    action_batch = torch.cat(action_batch, dim=0)
+    # space = env.action_space
+    # action_batch = [torch.tensor([space.index(a) for a in actions], device=device, dtype=torch.long) for actions in batch.action]
+    # action_batch = torch.cat(action_batch, dim=0)
 
     reward_batch = batch.reward
     reward_batch = torch.cat(reward_batch, dim=0)
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                 action = game.act(state, reward, done)
                 if not done:
                     _, reward, done, _ = env.step(action)
-                    reward = torch.tensor([reward], device=device)
+                    reward = torch.tensor([reward], device=device, dtype=torch.float)
                     next_state = env.state()
                 else:
                     next_state = None
