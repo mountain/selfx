@@ -145,7 +145,7 @@ def select_action(observation, reward, done):
 
 
 def optimize_model():
-    policy_net.train()
+    policy_net.train(mode=True)
 
     if len(memory) < BATCH_SIZE:
         return
