@@ -12,7 +12,7 @@ class Recurrent(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(state_dim, hidden_dim)
         self.nn = nn.LSTM(input_size=hidden_dim, hidden_size=hidden_dim,
-                          num_layers=3, batch_first=True)
+                          num_layers=1, batch_first=True)
         self.fc2 = nn.Linear(hidden_dim, action_dim)
 
     def forward(self, s, state=None, info={}):
