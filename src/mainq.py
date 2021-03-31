@@ -145,6 +145,8 @@ def select_action(observation, reward, done):
 
 
 def optimize_model():
+    policy_net.train()
+
     if len(memory) < BATCH_SIZE:
         return
     transitions = memory.sample(BATCH_SIZE)
