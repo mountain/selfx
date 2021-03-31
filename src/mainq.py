@@ -167,7 +167,7 @@ def optimize_model():
     state_batch = [torch.unsqueeze(torch.tensor(state, device=device, dtype=torch.float), 0) for state in batch.state]
     state_batch = torch.cat(state_batch, dim=0)
 
-    state_action_values = policy_net(state_batch)[0]
+    state_action_values = torch.unsqueeze(policy_net(state_batch)[0], 1)
     next_state_values = torch.unsqueeze(target_net(non_final_next_states)[0], 1)
     next_state_values = next_state_values * (non_final_mask == 1).view(-1, 1, 1)
     expected_state_action_values = (next_state_values * GAMMA) + reward_batch.view(-1, 1, 1)
