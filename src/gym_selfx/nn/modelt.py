@@ -60,18 +60,17 @@ class Net(nn.Module):
 
     def crossover(self, another):
         coeff = th.sigmoid(self.co1 + another.co1)
-
-        self.resnet.enconvs[0].transform.conv.weight = th.nn.Parameter(self.enconvs[0].transform.conv.weight * coeff + another.enconvs[0].transform.conv.weight * (1 - coeff))
-        self.resnet.enconvs[0].transform.conv.bias = th.nn.Parameter(self.enconvs[0].transform.conv.bias * coeff + another.enconvs[0].transform.conv.bias * (1 - coeff))
+        self.resnet.enconvs[0].transform.conv.depthwise.weight = th.nn.Parameter(self.enconvs[0].transform.conv.depthwise.weight * coeff + another.enconvs[0].transform.conv.depthwise.weight * (1 - coeff))
+        self.resnet.enconvs[0].transform.conv.depthwise.bias = th.nn.Parameter(self.enconvs[0].transform.conv.depthwise.bias * coeff + another.enconvs[0].transform.conv.depthwise.bias * (1 - coeff))
         coeff = th.sigmoid(self.co2 + another.co2)
-        self.resnet.enconvs[1].transform.conv.weight = th.nn.Parameter(self.enconvs[1].transform.conv.weight * coeff + another.enconvs[1].transform.conv.weight * (1 - coeff))
-        self.resnet.enconvs[1].transform.conv.bias = th.nn.Parameter(self.enconvs[1].transform.conv.bias * coeff + another.enconvs[1].transform.conv.bias * (1 - coeff))
+        self.resnet.enconvs[1].transform.conv.depthwise.weight = th.nn.Parameter(self.enconvs[1].transform.conv.depthwise.weight * coeff + another.enconvs[1].transform.conv.depthwise.weight * (1 - coeff))
+        self.resnet.enconvs[1].transform.conv.depthwise.bias = th.nn.Parameter(self.enconvs[1].transform.conv.depthwise.bias * coeff + another.enconvs[1].transform.conv.depthwise.bias * (1 - coeff))
         coeff = th.sigmoid(self.co3 + another.co3)
-        self.resnet.enconvs[2].transform.conv.weight = th.nn.Parameter(self.enconvs[2].transform.conv.weight * coeff + another.enconvs[2].transform.conv.weight * (1 - coeff))
-        self.resnet.enconvs[2].transform.conv.bias = th.nn.Parameter(self.enconvs[2].transform.conv.bias * coeff + another.enconvs[2].transform.conv.bias * (1 - coeff))
+        self.resnet.enconvs[2].transform.conv.depthwise.weight = th.nn.Parameter(self.enconvs[2].transform.conv.depthwise.weight * coeff + another.enconvs[2].transform.conv.depthwise.weight * (1 - coeff))
+        self.resnet.enconvs[2].transform.conv.depthwise.bias = th.nn.Parameter(self.enconvs[2].transform.conv.depthwise.bias * coeff + another.enconvs[2].transform.conv.depthwise.bias * (1 - coeff))
         coeff = th.sigmoid(self.co4 + another.co4)
-        self.resnet.enconvs[3].transform.conv.weight = th.nn.Parameter(self.enconvs[3].transform.conv.weight * coeff + another.enconvs[3].transform.conv.weight * (1 - coeff))
-        self.resnet.enconvs[3].transform.conv.bias = th.nn.Parameter(self.enconvs[3].transform.conv.bias * coeff + another.enconvs[3].transform.conv.bias * (1 - coeff))
+        self.resnet.enconvs[3].transform.conv.depthwise.weight = th.nn.Parameter(self.enconvs[3].transform.conv.depthwise.weight * coeff + another.enconvs[3].transform.conv.depthwise.weight * (1 - coeff))
+        self.resnet.enconvs[3].transform.conv.depthwise.bias = th.nn.Parameter(self.enconvs[3].transform.conv.depthwise.bias * coeff + another.enconvs[3].transform.conv.depthwise.bias * (1 - coeff))
 
         if random.random() > 0.90:
             self.co1 = th.tanh(self.co1 + another.co1) * random.random()
