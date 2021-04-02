@@ -73,7 +73,7 @@ target_net.eval()
 
 steps_done = 0
 memory = ReplayMemory(10000)
-optimizer = optim.Adam(policy_net.parameters())
+optimizer = optim.RMSprop(policy_net.parameters())
 
 
 def nature_selection():
