@@ -1,5 +1,7 @@
 # selfx: a self explorer
 
+[![DOI](https://zenodo.org/badge/191362875.svg)](https://zenodo.org/badge/latestdoi/191362875)
+
 The nature of self is a hot topic in human history, rich but debating. Reinforcement learning sheds new light on this old area. In this project, we investigate the potential of the reflective two-world structure:
 * the outer world: the real game environment
 * the inner world: a virtual world set up by the agent
