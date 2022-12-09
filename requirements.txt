@@ -1,4 +1,4 @@
-gym==0.17.3
+gymnasium
 
 opencv-python
 opencv-contrib-python
