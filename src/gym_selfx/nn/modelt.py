@@ -3,8 +3,8 @@ import random
 import torch as th
 import torch.nn as nn
 
+from torch.nn.functional import linear
 from leibniz.nn.net import resnetz
-from leibniz.nn.layer.senet import SEBottleneck
 
 
 class Recurrent(nn.Module):
@@ -50,6 +50,7 @@ class Net(nn.Module):
         self.output_dim = a
         self.max_action_num = a
         self.resnet = resnetz(18, 2 * a, layers=4, spatial=(h, w))
+        self.fc = nn.Linear(h * w * a, a)
         self.recrr = Recurrent(2 * a, a, 4 * a)
 
         self.co1 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)
@@ -82,6 +83,7 @@ class Net(nn.Module):
             obs = th.tensor(obs, dtype=th.float)
             obs = obs.cuda() if self.flag else obs
 
-        result = self.recrr(self.resnet(obs), state=state)
+        result = self.fc(self.resnet(obs))
+        result = self.recrr(result, state=state)
 
         return result
