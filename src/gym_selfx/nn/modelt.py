@@ -3,8 +3,8 @@ import random
 import torch as th
 import torch.nn as nn
 
-from leibniz.nn.net import resnet
-from leibniz.nn.layer.hyperbolic import HyperBottleneck
+from leibniz.nn.net import resnetz
+from leibniz.nn.layer.senet import SEBottleneck
 
 
 class Recurrent(nn.Module):
@@ -49,8 +49,7 @@ class Net(nn.Module):
         h, w, a = state_shape[0] // 3, state_shape[1], action_shape
         self.output_dim = a
         self.max_action_num = a
-        self.resnet = resnet(18, 2 * a, layers=4, ratio=-2, block=HyperBottleneck,
-            vblks=[1, 1, 1, 1], scales=[-2, -2, -2, -2], factors=[1, 1, 1, 1], spatial=(h, w))
+        self.resnet = resnetz(18, 2 * a, layers=4, spatial=(h, w))
         self.recrr = Recurrent(2 * a, a, 4 * a)
 
         self.co1 = th.scalar_tensor(2 * random.random() - 1, dtype=th.float32)

@@ -1,15 +1,15 @@
-tianshou
+tianshou==0.4.0
 
-opencv-python
-opencv-contrib-python
-box2d
-box2d-kengz
+opencv-python==4.6.0.66
+opencv-contrib-python==4.6.0.66
+box2d==2.3.10
+box2d-kengz==2.3.3
 
-torch
-torchvision
+torch==1.13.0
+torchvision==0.14.0
 
-gymnasium
-affordable
-leibniz
+gym==0.17.3
+affordable==0.0.1
+leibniz==0.1.62
 
-redis
+redis==4.4.0
