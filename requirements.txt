@@ -1,4 +1,4 @@
-gymnasium
+tianshou
 
 opencv-python
 opencv-contrib-python
@@ -8,8 +8,8 @@ box2d-kengz
 torch
 torchvision
 
+gymnasium
 affordable
-tianshou
 leibniz
 
 redis
