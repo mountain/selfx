@@ -12,4 +12,4 @@ gym==0.17.3
 affordable==0.0.1
 leibniz==0.1.62
 
-redis==4.4.0
+redis==4.4.4
